@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Meu Primeiro Sistema</title>
+</head>
+<body>
+
+    <h1>Meu Sistema Simples</h1>
+
+    <button onclick="salvar()">Salvar mensagem</button>
+
+    <p id="resposta"></p>
+
+    <script>
+        function salvar() {
+            fetch("/salvar")
+                .then(res => res.text())
+                .then(msg => {
+                    document.getElementById("resposta").innerText = msg;
+                });
+        }
+    </script>
+
+</body>
+</html>
