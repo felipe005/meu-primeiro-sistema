@@ -1,15 +1,21 @@
 {
   "name": "meu-primeiro-sistema",
   "version": "1.0.0",
-  "description": "",
+  "description": "SaaS multi-tenant com Node.js, Express, SQLite e frontend HTML/CSS/JS",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node index.js"
   },
-  "keywords": [],
+  "keywords": [
+    "saas",
+    "multi-tenant",
+    "express",
+    "sqlite"
+  ],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
     "sqlite3": "^5.1.7"

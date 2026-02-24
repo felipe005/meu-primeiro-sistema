@@ -1,0 +1,183 @@
+:root {
+  --bg: #0b1020;
+  --bg-soft: #121a2d;
+  --card: #1a2338;
+  --text: #e8eefc;
+  --muted: #9ca9c8;
+  --accent: #29d3b2;
+  --danger: #ef4f67;
+  --border: #2d3a57;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: radial-gradient(circle at top right, #20304f, var(--bg) 40%);
+  min-height: 100vh;
+}
+
+.auth-body {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-panel,
+.card,
+.sidebar {
+  background: rgba(26, 35, 56, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 520px;
+}
+
+.auth-panel {
+  padding: 24px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.tab {
+  flex: 1;
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
+.tab.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.form {
+  display: none;
+  gap: 8px;
+}
+
+.form.active {
+  display: grid;
+}
+
+input,
+select,
+button {
+  border: 1px solid var(--border);
+  background: #0f1728;
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+button {
+  cursor: pointer;
+  background: linear-gradient(120deg, #1e8f95, var(--accent));
+  color: #031a17;
+  font-weight: 700;
+}
+
+button.danger {
+  background: linear-gradient(120deg, #b3263f, var(--danger));
+  color: #fff;
+}
+
+.message {
+  color: var(--accent);
+  min-height: 24px;
+  margin: 10px 0 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.app-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  padding: 18px;
+}
+
+.sidebar {
+  padding: 18px;
+  height: fit-content;
+  position: sticky;
+  top: 18px;
+}
+
+.content {
+  display: grid;
+  gap: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.metric {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.metric .value {
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.card {
+  padding: 16px;
+}
+
+.inline-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  padding: 8px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 900px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+}

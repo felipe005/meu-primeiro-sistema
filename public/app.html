@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SaaS Multi-tenant | Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="app-body">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <h2>LaunchSaaS</h2>
+      <p id="company-label"></p>
+      <p id="user-label" class="muted"></p>
+      <button id="logout-btn" class="danger">Sair</button>
+    </aside>
+
+    <main class="content">
+      <header>
+        <h1>Dashboard</h1>
+        <p id="plan-badge" class="badge"></p>
+      </header>
+
+      <section id="metrics" class="grid"></section>
+
+      <section class="card">
+        <h3>Assinatura</h3>
+        <form id="subscription-form" class="inline-form">
+          <select name="planStatus">
+            <option value="active">Ativo</option>
+            <option value="inactive">Inativo</option>
+          </select>
+          <input type="number" name="monthlyFee" min="0" step="0.01" placeholder="Mensalidade" required />
+          <input type="date" name="nextBillingDate" />
+          <button type="submit">Atualizar plano</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h3>Clientes (CRUD)</h3>
+        <form id="client-form" class="inline-form">
+          <input type="hidden" name="id" />
+          <input type="text" name="name" placeholder="Nome" required />
+          <input type="email" name="email" placeholder="Email" />
+          <input type="text" name="phone" placeholder="Telefone" />
+          <select name="status">
+            <option value="lead">Lead</option>
+            <option value="active">Ativo</option>
+            <option value="inactive">Inativo</option>
+          </select>
+          <input type="text" name="notes" placeholder="Observacoes" />
+          <button type="submit">Salvar cliente</button>
+          <button type="button" id="client-clear">Limpar</button>
+        </form>
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Acoes</th>
+            </tr>
+          </thead>
+          <tbody id="clients-table"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h3>Usuarios (CRUD)</h3>
+        <form id="user-form" class="inline-form">
+          <input type="hidden" name="id" />
+          <input type="text" name="name" placeholder="Nome" required />
+          <input type="email" name="email" placeholder="Email" required />
+          <input type="password" name="password" placeholder="Senha (opcional em edicao)" />
+          <select name="role">
+            <option value="member">Member</option>
+            <option value="admin">Admin</option>
+          </select>
+          <select name="active">
+            <option value="1">Ativo</option>
+            <option value="0">Inativo</option>
+          </select>
+          <button type="submit">Salvar usuario</button>
+          <button type="button" id="user-clear">Limpar</button>
+        </form>
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Papel</th>
+              <th>Status</th>
+              <th>Acoes</th>
+            </tr>
+          </thead>
+          <tbody id="users-table"></tbody>
+        </table>
+      </section>
+
+      <p id="app-message" class="message"></p>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
