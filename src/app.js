@@ -6,6 +6,9 @@ const userRoutes = require('./routes/userRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
+const teamRoutes = require('./routes/teamRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 const { requireAuth, requireAdmin, requireActiveSubscription } = require('./middlewares/authMiddleware');
 const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
 
@@ -27,6 +30,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', requireAuth, requireActiveSubscription, dashboardRoutes);
 app.use('/api/users', requireAuth, requireActiveSubscription, requireAdmin, userRoutes);
 app.use('/api/clients', requireAuth, requireActiveSubscription, clientRoutes);
+app.use('/api/services', requireAuth, requireActiveSubscription, serviceRoutes);
+app.use('/api/team', requireAuth, requireActiveSubscription, teamRoutes);
+app.use('/api/appointments', requireAuth, requireActiveSubscription, appointmentRoutes);
 app.use('/api/subscription', requireAuth, subscriptionRoutes);
 
 app.use('/api', notFound);
