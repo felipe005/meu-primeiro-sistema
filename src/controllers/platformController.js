@@ -1,5 +1,6 @@
 const db = require('../utils/db');
 const subscriptionModel = require('../models/subscriptionModel');
+const PAYMENT_METHODS = ['pix', 'cartao_credito', 'cartao_debito', 'boleto', 'transferencia'];
 
 async function overview(req, res, next) {
   try {
@@ -29,6 +30,7 @@ async function listCompanies(req, res, next) {
     const rows = await db.all(
       `SELECT c.id, c.name, c.business_type AS businessType, c.created_at AS createdAt,
               s.plan_status AS planStatus, s.monthly_fee AS monthlyFee, s.pix_key AS pixKey,
+              s.preferred_payment_method AS preferredPaymentMethod,
               s.next_billing_date AS nextBillingDate,
               (SELECT COUNT(*) FROM users u WHERE u.company_id = c.id) AS usersCount,
               (SELECT COUNT(*) FROM appointments a WHERE a.company_id = c.id) AS appointmentsCount
@@ -60,10 +62,17 @@ async function updateCompanySubscription(req, res, next) {
       return;
     }
 
+    const preferredPaymentMethod = req.body.preferredPaymentMethod || 'pix';
+    if (!PAYMENT_METHODS.includes(preferredPaymentMethod)) {
+      res.status(400).json({ message: 'preferredPaymentMethod invalido.' });
+      return;
+    }
+
     await subscriptionModel.updateByCompany(companyId, {
       planStatus,
       monthlyFee,
       pixKey: req.body.pixKey || null,
+      preferredPaymentMethod,
       nextBillingDate: req.body.nextBillingDate || null,
     });
 

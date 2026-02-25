@@ -44,6 +44,7 @@ document.getElementById('register-form').addEventListener('submit', async (event
   event.preventDefault();
   const formData = new FormData(event.target);
   const data = Object.fromEntries(formData.entries());
+  data.monthlyFee = 49.99;
 
   try {
     await request('/api/auth/register', 'POST', data);

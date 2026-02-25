@@ -182,7 +182,10 @@
               <select name="method">
                 <option value="pix">Pix</option>
                 <option value="dinheiro">Dinheiro</option>
-                <option value="cartao">Cartao</option>
+                <option value="cartao_credito">Cartao de Credito</option>
+                <option value="cartao_debito">Cartao de Debito</option>
+                <option value="boleto">Boleto</option>
+                <option value="transferencia">Transferencia</option>
               </select>
               <input type="text" name="reference" placeholder="Referencia (opcional)" />
               <div class="form-actions">
@@ -195,6 +198,17 @@
       </section>
 
       <section class="view" id="view-billing">
+        <div class="payment-options card-shell block-pad">
+          <h3>Formas de Pagamento Aceitas</h3>
+          <div class="option-chips">
+            <span class="tag ok">Pix</span>
+            <span class="tag">Cartao Credito</span>
+            <span class="tag">Cartao Debito</span>
+            <span class="tag">Boleto</span>
+            <span class="tag">Transferencia</span>
+          </div>
+        </div>
+
         <div class="view-grid">
           <div class="card-shell block-pad">
             <div class="section-head compact">
@@ -206,6 +220,13 @@
                 <option value="inactive">Plano Inativo</option>
               </select>
               <input type="number" step="0.01" min="0" name="monthlyFee" placeholder="Mensalidade" required />
+              <select name="preferredPaymentMethod">
+                <option value="pix">Metodo Preferido: Pix</option>
+                <option value="cartao_credito">Metodo Preferido: Cartao de Credito</option>
+                <option value="cartao_debito">Metodo Preferido: Cartao de Debito</option>
+                <option value="boleto">Metodo Preferido: Boleto</option>
+                <option value="transferencia">Metodo Preferido: Transferencia</option>
+              </select>
               <input type="date" name="nextBillingDate" />
               <input type="text" name="pixKey" id="pix-key" placeholder="Chave Pix" />
               <div class="form-actions">
@@ -216,14 +237,21 @@
 
           <div class="card-shell block-pad">
             <div class="section-head compact">
-              <h2>Pagamento via Pix</h2>
+              <h2>Cobrancas e Pagamentos</h2>
             </div>
-            <p class="muted" id="pix-copy-text">Informe a chave Pix para gerar QR Code.</p>
+            <p class="muted" id="pix-copy-text">Informe a chave Pix para gerar QR Code quando necessario.</p>
             <img id="pix-qrcode" class="pix-qrcode hidden" alt="QR Code Pix" />
 
             <form id="subscription-payment-form" class="form-grid">
               <input type="number" step="0.01" min="0.01" name="amount" placeholder="Valor" required />
               <input type="date" name="dueDate" />
+              <select name="method">
+                <option value="pix">Cobrar via Pix</option>
+                <option value="cartao_credito">Cobrar via Cartao de Credito</option>
+                <option value="cartao_debito">Cobrar via Cartao de Debito</option>
+                <option value="boleto">Cobrar via Boleto</option>
+                <option value="transferencia">Cobrar via Transferencia</option>
+              </select>
               <input type="text" name="reference" placeholder="Referencia" />
               <select name="status">
                 <option value="pending">Pendente</option>

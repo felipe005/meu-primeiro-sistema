@@ -15,8 +15,9 @@ const schemaStatements = [
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     company_id INTEGER NOT NULL UNIQUE,
     plan_status TEXT NOT NULL DEFAULT 'active' CHECK(plan_status IN ('active', 'inactive')),
-    monthly_fee REAL NOT NULL DEFAULT 99.90,
+    monthly_fee REAL NOT NULL DEFAULT 49.99,
     pix_key TEXT,
+    preferred_payment_method TEXT NOT NULL DEFAULT 'pix' CHECK(preferred_payment_method IN ('pix', 'cartao_credito', 'cartao_debito', 'boleto', 'transferencia')),
     next_billing_date TEXT,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
@@ -170,6 +171,7 @@ const migrationStatements = [
   'ALTER TABLE clients ADD COLUMN last_payment_date TEXT;',
   "ALTER TABLE clients ADD COLUMN payment_status TEXT NOT NULL DEFAULT 'pendente';",
   "ALTER TABLE users ADD COLUMN platform_owner INTEGER NOT NULL DEFAULT 0;",
+  "ALTER TABLE subscriptions ADD COLUMN preferred_payment_method TEXT NOT NULL DEFAULT 'pix';",
 ];
 
 const seedStatements = [

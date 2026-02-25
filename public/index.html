@@ -26,6 +26,12 @@
       </form>
 
       <form id="register-form" class="form">
+        <div class="promo-card">
+          <p class="promo-badge">Promocao de Lancamento</p>
+          <p class="promo-title">Assine agora por <strong>R$ 49,99/mês</strong></p>
+          <p class="promo-subtitle">De R$ 99,90 por R$ 49,99 nos primeiros meses.</p>
+        </div>
+
         <label>Nome da empresa</label>
         <input type="text" name="companyName" required />
         <label>Tipo de negocio</label>
@@ -37,7 +43,15 @@
         <label>Senha admin</label>
         <input type="password" name="password" minlength="6" required />
         <label>Mensalidade (R$)</label>
-        <input type="number" name="monthlyFee" min="0" step="0.01" value="99.9" required />
+        <input type="number" name="monthlyFee" min="0" step="0.01" value="49.99" readonly />
+        <label>Forma de pagamento preferida</label>
+        <select name="preferredPaymentMethod" required>
+          <option value="pix">Pix</option>
+          <option value="cartao_credito">Cartao de Credito</option>
+          <option value="cartao_debito">Cartao de Debito</option>
+          <option value="boleto">Boleto</option>
+          <option value="transferencia">Transferencia</option>
+        </select>
         <button type="submit">Criar conta SaaS</button>
       </form>
 

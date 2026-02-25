@@ -89,6 +89,7 @@ function renderCompanies() {
             planStatus: btn.dataset.next,
             monthlyFee: company.monthlyFee,
             pixKey: company.pixKey || '',
+            preferredPaymentMethod: company.preferredPaymentMethod || 'pix',
             nextBillingDate: company.nextBillingDate,
           }),
         });

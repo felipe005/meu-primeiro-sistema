@@ -17,6 +17,14 @@ const state = {
   mapPoints: [],
 };
 const DEFAULT_PIX_KEY = '71275808123';
+const PAYMENT_LABELS = {
+  pix: 'Pix',
+  dinheiro: 'Dinheiro',
+  cartao_credito: 'Cartao de Credito',
+  cartao_debito: 'Cartao de Debito',
+  boleto: 'Boleto',
+  transferencia: 'Transferencia',
+};
 
 const nodes = {
   appMessage: document.getElementById('app-message'),
@@ -106,6 +114,10 @@ function formatDate(isoDate) {
   const d = new Date(isoDate);
   if (Number.isNaN(d.getTime())) return isoDate;
   return d.toLocaleDateString('pt-BR');
+}
+
+function paymentLabel(method) {
+  return PAYMENT_LABELS[method] || method || '-';
 }
 
 function setActiveTab(tab) {
@@ -422,7 +434,7 @@ function renderClientPayments() {
     .map((item) => `<article class="item-card compact">
       <div class="item-main">
         <h3>${item.clientName}</h3>
-        <p>${money(item.amount)} via ${item.method} - ${formatDate(item.paidAt)}</p>
+        <p>${money(item.amount)} via ${paymentLabel(item.method)} - ${formatDate(item.paidAt)}</p>
       </div>
       <span class="tag ok">Recebido</span>
     </article>`)
@@ -462,7 +474,7 @@ function renderSubscriptionPayments() {
     .map((item) => `<article class="item-card compact">
       <div class="item-main">
         <h3>${money(item.amount)} - ${item.status === 'paid' ? 'Pago' : 'Pendente'}</h3>
-        <p>Vencimento: ${formatDate(item.dueDate)} | Pago: ${formatDate(item.paidAt)}</p>
+        <p>Metodo: ${paymentLabel(item.method)} | Vencimento: ${formatDate(item.dueDate)} | Pago: ${formatDate(item.paidAt)}</p>
       </div>
       <div class="item-actions">
         ${item.status !== 'paid' ? `<button class="icon-btn" data-pay-sub="${item.id}">Marcar pago</button>` : '<span class="tag ok">Pago</span>'}
@@ -493,7 +505,7 @@ function showBillingAlert() {
 
   if (diffDays <= 5) {
     nodes.billingAlert.textContent = diffDays >= 0
-      ? `Atencao: sua assinatura vence em ${diffDays} dia(s). Evite bloqueio e pague via Pix antes do vencimento.`
+      ? `Atencao: sua assinatura vence em ${diffDays} dia(s). Evite bloqueio e regularize pelo metodo de pagamento escolhido.`
       : 'Sua assinatura esta vencida. Regularize agora para manter o sistema ativo.';
     nodes.billingAlert.classList.remove('hidden');
   } else {
@@ -767,95 +779,123 @@ function registerEvents() {
 
   nodes.appointmentForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const data = Object.fromEntries(new FormData(nodes.appointmentForm).entries());
-    const id = data.id;
-    delete data.id;
-    data.vehiclePlate = formatPlate(data.vehiclePlate);
-    data.price = Number(data.price || 0);
-    data.serviceId = data.serviceId ? Number(data.serviceId) : null;
-    data.teamMemberId = data.teamMemberId ? Number(data.teamMemberId) : null;
+    try {
+      const data = Object.fromEntries(new FormData(nodes.appointmentForm).entries());
+      const id = data.id;
+      delete data.id;
+      data.vehiclePlate = formatPlate(data.vehiclePlate);
+      data.price = Number(data.price || 0);
+      data.serviceId = data.serviceId ? Number(data.serviceId) : null;
+      data.teamMemberId = data.teamMemberId ? Number(data.teamMemberId) : null;
 
-    if (id) await api(`/api/appointments/${id}`, { method: 'PUT', body: JSON.stringify(data) });
-    else await api('/api/appointments', { method: 'POST', body: JSON.stringify(data) });
-    resetAndHide(nodes.appointmentForm);
-    await Promise.all([loadAppointments(), loadMetrics()]);
-    showMessage('Agendamento salvo.');
+      if (id) await api(`/api/appointments/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+      else await api('/api/appointments', { method: 'POST', body: JSON.stringify(data) });
+      resetAndHide(nodes.appointmentForm);
+      await Promise.all([loadAppointments(), loadMetrics()]);
+      showMessage('Agendamento salvo.');
+    } catch (error) {
+      showMessage(error.message, true);
+    }
   });
 
   nodes.serviceForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const data = Object.fromEntries(new FormData(nodes.serviceForm).entries());
-    const id = data.id;
-    delete data.id;
-    data.price = Number(data.price || 0);
-    data.durationMinutes = Number(data.durationMinutes || 0);
-    data.active = Number(data.active || 1);
-    if (id) await api(`/api/services/${id}`, { method: 'PUT', body: JSON.stringify(data) });
-    else await api('/api/services', { method: 'POST', body: JSON.stringify(data) });
-    resetAndHide(nodes.serviceForm);
-    await Promise.all([loadServices(), loadMetrics()]);
-    showMessage('Servico salvo.');
+    try {
+      const data = Object.fromEntries(new FormData(nodes.serviceForm).entries());
+      const id = data.id;
+      delete data.id;
+      data.price = Number(data.price || 0);
+      data.durationMinutes = Number(data.durationMinutes || 0);
+      data.active = Number(data.active || 1);
+      if (id) await api(`/api/services/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+      else await api('/api/services', { method: 'POST', body: JSON.stringify(data) });
+      resetAndHide(nodes.serviceForm);
+      await Promise.all([loadServices(), loadMetrics()]);
+      showMessage('Servico salvo.');
+    } catch (error) {
+      showMessage(error.message, true);
+    }
   });
 
   nodes.teamForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const data = Object.fromEntries(new FormData(nodes.teamForm).entries());
-    const id = data.id;
-    delete data.id;
-    data.salary = Number(data.salary || 0);
-    data.active = Number(data.active || 1);
-    if (id) await api(`/api/team/${id}`, { method: 'PUT', body: JSON.stringify(data) });
-    else await api('/api/team', { method: 'POST', body: JSON.stringify(data) });
-    resetAndHide(nodes.teamForm);
-    await Promise.all([loadTeam(), loadMetrics()]);
-    showMessage('Funcionario salvo.');
+    try {
+      const data = Object.fromEntries(new FormData(nodes.teamForm).entries());
+      const id = data.id;
+      delete data.id;
+      data.salary = Number(data.salary || 0);
+      data.active = Number(data.active || 1);
+      if (id) await api(`/api/team/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+      else await api('/api/team', { method: 'POST', body: JSON.stringify(data) });
+      resetAndHide(nodes.teamForm);
+      await Promise.all([loadTeam(), loadMetrics()]);
+      showMessage('Funcionario salvo.');
+    } catch (error) {
+      showMessage(error.message, true);
+    }
   });
 
   nodes.clientForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const data = Object.fromEntries(new FormData(nodes.clientForm).entries());
-    const id = data.id;
-    delete data.id;
-    data.vehiclePlate = formatPlate(data.vehiclePlate);
-    data.monthlyFee = Number(data.monthlyFee || 0);
-    if (id) await api(`/api/clients/${id}`, { method: 'PUT', body: JSON.stringify(data) });
-    else await api('/api/clients', { method: 'POST', body: JSON.stringify(data) });
-    resetAndHide(nodes.clientForm);
-    await loadClients();
-    showMessage('Cliente salvo.');
+    try {
+      const data = Object.fromEntries(new FormData(nodes.clientForm).entries());
+      const id = data.id;
+      delete data.id;
+      data.vehiclePlate = formatPlate(data.vehiclePlate);
+      data.monthlyFee = Number(data.monthlyFee || 0);
+      if (id) await api(`/api/clients/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+      else await api('/api/clients', { method: 'POST', body: JSON.stringify(data) });
+      resetAndHide(nodes.clientForm);
+      await loadClients();
+      showMessage('Cliente salvo.');
+    } catch (error) {
+      showMessage(error.message, true);
+    }
   });
 
   nodes.clientPaymentForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const data = Object.fromEntries(new FormData(nodes.clientPaymentForm).entries());
-    if (!data.clientId) {
-      showMessage('Selecione um cliente.', true);
-      return;
+    try {
+      const data = Object.fromEntries(new FormData(nodes.clientPaymentForm).entries());
+      if (!data.clientId) {
+        showMessage('Selecione um cliente.', true);
+        return;
+      }
+      data.amount = Number(data.amount || 0);
+      await api(`/api/clients/${data.clientId}/payments`, { method: 'POST', body: JSON.stringify(data) });
+      nodes.clientPaymentForm.reset();
+      await Promise.all([loadClients(), loadClientPayments()]);
+      showMessage('Pagamento do cliente registrado.');
+    } catch (error) {
+      showMessage(error.message, true);
     }
-    data.amount = Number(data.amount || 0);
-    await api(`/api/clients/${data.clientId}/payments`, { method: 'POST', body: JSON.stringify(data) });
-    nodes.clientPaymentForm.reset();
-    await Promise.all([loadClients(), loadClientPayments()]);
-    showMessage('Pagamento do cliente registrado.');
   });
 
   nodes.subscriptionForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const data = Object.fromEntries(new FormData(nodes.subscriptionForm).entries());
-    data.monthlyFee = Number(data.monthlyFee || 0);
-    await api('/api/subscription', { method: 'PUT', body: JSON.stringify(data) });
-    await Promise.all([loadMe(), loadSubscription(), loadMetrics()]);
-    showMessage('Assinatura atualizada.');
+    try {
+      const data = Object.fromEntries(new FormData(nodes.subscriptionForm).entries());
+      data.monthlyFee = Number(data.monthlyFee || 0);
+      await api('/api/subscription', { method: 'PUT', body: JSON.stringify(data) });
+      await Promise.all([loadMe(), loadSubscription(), loadMetrics()]);
+      showMessage('Assinatura atualizada.');
+    } catch (error) {
+      showMessage(error.message, true);
+    }
   });
 
   nodes.subscriptionPaymentForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const data = Object.fromEntries(new FormData(nodes.subscriptionPaymentForm).entries());
-    data.amount = Number(data.amount || 0);
-    await api('/api/subscription/payments', { method: 'POST', body: JSON.stringify(data) });
-    nodes.subscriptionPaymentForm.reset();
-    await loadSubscriptionPayments();
-    showMessage('Cobranca da assinatura criada.');
+    try {
+      const data = Object.fromEntries(new FormData(nodes.subscriptionPaymentForm).entries());
+      data.amount = Number(data.amount || 0);
+      await api('/api/subscription/payments', { method: 'POST', body: JSON.stringify(data) });
+      nodes.subscriptionPaymentForm.reset();
+      await loadSubscriptionPayments();
+      showMessage('Cobranca da assinatura criada.');
+    } catch (error) {
+      showMessage(error.message, true);
+    }
   });
 
   nodes.cashForm.addEventListener('submit', (event) => {
@@ -906,8 +946,14 @@ function registerEvents() {
     const data = Object.fromEntries(new FormData(nodes.stockMoveForm).entries());
     data.quantity = Number(data.quantity || 0);
     const item = state.stockItems.find((row) => row.id === data.itemId);
-    if (!item) return;
-    if (data.type === 'saida' && Number(item.quantity) < data.quantity) return;
+    if (!item) {
+      showMessage('Selecione um item valido.', true);
+      return;
+    }
+    if (data.type === 'saida' && Number(item.quantity) < data.quantity) {
+      showMessage('Estoque insuficiente para esta saida.', true);
+      return;
+    }
     item.quantity = data.type === 'entrada' ? Number(item.quantity) + data.quantity : Number(item.quantity) - data.quantity;
     writeLocal('stock_items', state.stockItems);
     nodes.stockMoveForm.reset();

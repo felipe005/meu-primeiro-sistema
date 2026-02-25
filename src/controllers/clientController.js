@@ -3,6 +3,7 @@ const clientModel = require('../models/clientModel');
 const validStatus = ['lead', 'active', 'inactive'];
 const validPaymentStatus = ['em_dia', 'pendente', 'atrasado'];
 const validPlateType = ['mercosul', 'antiga', 'nao_informado'];
+const validPaymentMethod = ['pix', 'dinheiro', 'cartao_credito', 'cartao_debito', 'boleto', 'transferencia'];
 
 function buildClientPayload(body = {}) {
   return {
@@ -149,9 +150,15 @@ async function createClientPayment(req, res, next) {
     }
 
     const paymentDate = req.body.paidAt || new Date().toISOString();
+    const method = req.body.method || 'pix';
+    if (!validPaymentMethod.includes(method)) {
+      res.status(400).json({ message: 'method invalido.' });
+      return;
+    }
+
     await clientModel.createPayment(req.auth.companyId, clientId, {
       amount,
-      method: req.body.method || 'pix',
+      method,
       reference: req.body.reference || null,
       paidAt: paymentDate,
     });

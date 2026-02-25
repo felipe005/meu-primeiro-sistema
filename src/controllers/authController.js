@@ -9,6 +9,8 @@ const { generateSessionToken, expiresAtISOString } = require('../utils/session')
 
 const cookieOptions = 'HttpOnly; Path=/; SameSite=Lax';
 const DEFAULT_PIX_KEY = '71275808123';
+const PROMO_MONTHLY_FEE = 49.99;
+const PAYMENT_METHODS = ['pix', 'cartao_credito', 'cartao_debito', 'boleto', 'transferencia'];
 
 async function register(req, res, next) {
   try {
@@ -18,9 +20,9 @@ async function register(req, res, next) {
       adminName,
       email,
       password,
-      monthlyFee = 99.9,
       planStatus = 'active',
       pixKey = DEFAULT_PIX_KEY,
+      preferredPaymentMethod = 'pix',
       nextBillingDate,
     } = req.body;
 
@@ -40,6 +42,8 @@ async function register(req, res, next) {
       return;
     }
 
+    const paymentMethod = PAYMENT_METHODS.includes(preferredPaymentMethod) ? preferredPaymentMethod : 'pix';
+
     await db.transaction(async () => {
       const company = await companyModel.create({ name: companyName, businessType });
       const passwordHash = hashPassword(password);
@@ -54,9 +58,10 @@ async function register(req, res, next) {
       });
       await subscriptionModel.create({
         companyId: company.id,
-        monthlyFee: Number(monthlyFee),
+        monthlyFee: PROMO_MONTHLY_FEE,
         planStatus: planStatus === 'inactive' ? 'inactive' : 'active',
         pixKey: pixKey || DEFAULT_PIX_KEY,
+        preferredPaymentMethod: paymentMethod,
         nextBillingDate: nextBillingDate || null,
       });
     });

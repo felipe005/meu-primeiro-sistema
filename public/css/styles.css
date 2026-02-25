@@ -49,6 +49,35 @@ body {
   border: 1px solid var(--line);
 }
 
+.promo-card {
+  border: 1px solid #2f6ece;
+  background: linear-gradient(135deg, rgba(41, 94, 186, 0.26), rgba(22, 49, 100, 0.18));
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.promo-badge {
+  display: inline-block;
+  margin: 0 0 6px;
+  padding: 3px 9px;
+  border: 1px solid #4b93ff;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: #c9e1ff;
+}
+
+.promo-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.promo-subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .tabs { display: flex; gap: 8px; margin: 18px 0; }
 .tab {
   flex: 1;
@@ -302,6 +331,16 @@ main { display: grid; gap: 12px; }
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.payment-options h3 {
+  margin: 0 0 8px;
+}
+
+.option-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .block-pad { padding: 12px; }

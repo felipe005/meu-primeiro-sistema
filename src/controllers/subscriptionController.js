@@ -1,4 +1,5 @@
 const subscriptionModel = require('../models/subscriptionModel');
+const PAYMENT_METHODS = ['pix', 'cartao_credito', 'cartao_debito', 'boleto', 'transferencia'];
 
 async function getSubscription(req, res, next) {
   try {
@@ -11,7 +12,7 @@ async function getSubscription(req, res, next) {
 
 async function updateSubscription(req, res, next) {
   try {
-    const { planStatus, monthlyFee, pixKey, nextBillingDate } = req.body;
+    const { planStatus, monthlyFee, pixKey, preferredPaymentMethod = 'pix', nextBillingDate } = req.body;
 
     if (!['active', 'inactive'].includes(planStatus)) {
       res.status(400).json({ message: 'planStatus deve ser active ou inactive.' });
@@ -24,10 +25,16 @@ async function updateSubscription(req, res, next) {
       return;
     }
 
+    if (!PAYMENT_METHODS.includes(preferredPaymentMethod)) {
+      res.status(400).json({ message: 'preferredPaymentMethod invalido.' });
+      return;
+    }
+
     await subscriptionModel.updateByCompany(req.auth.companyId, {
       planStatus,
       monthlyFee: fee,
       pixKey: pixKey || null,
+      preferredPaymentMethod,
       nextBillingDate: nextBillingDate || null,
     });
 
@@ -54,13 +61,19 @@ async function createPayment(req, res, next) {
       return;
     }
 
+    const method = req.body.method || 'pix';
+    if (!PAYMENT_METHODS.includes(method)) {
+      res.status(400).json({ message: 'method invalido.' });
+      return;
+    }
+
     const status = req.body.status === 'paid' ? 'paid' : 'pending';
     const paidAt = status === 'paid' ? (req.body.paidAt || new Date().toISOString()) : null;
     const created = await subscriptionModel.createPayment(req.auth.companyId, {
       amount,
       dueDate: req.body.dueDate || null,
       paidAt,
-      method: req.body.method || 'pix',
+      method,
       reference: req.body.reference || null,
       status,
     });
