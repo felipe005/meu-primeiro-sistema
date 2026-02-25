@@ -11,7 +11,20 @@ const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://cdn.tailwindcss.com'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https:'],
+      },
+    },
+  })
+);
 app.use(cors({ origin: env.corsOrigin, credentials: true }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 500 }));
 app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
