@@ -15,16 +15,22 @@ const PAYMENT_METHODS = ['pix', 'cartao_credito', 'cartao_debito', 'boleto', 'tr
 async function register(req, res, next) {
   try {
     const {
-      companyName,
-      businessType = 'Lava-Jato',
-      adminName,
-      email,
-      password,
+      companyName: rawCompanyName,
+      businessType: rawBusinessType = 'Lava-Jato',
+      adminName: rawAdminName,
+      email: rawEmail,
+      password: rawPassword,
       planStatus = 'active',
       pixKey = DEFAULT_PIX_KEY,
       preferredPaymentMethod = 'pix',
       nextBillingDate,
     } = req.body;
+
+    const companyName = (rawCompanyName || '').trim();
+    const businessType = (rawBusinessType || 'Lava-Jato').trim() || 'Lava-Jato';
+    const adminName = (rawAdminName || '').trim();
+    const email = (rawEmail || '').trim().toLowerCase();
+    const password = String(rawPassword || '');
 
     if (!companyName || !adminName || !email || !password) {
       res.status(400).json({ message: 'Preencha companyName, adminName, email e password.' });
@@ -36,9 +42,9 @@ async function register(req, res, next) {
       return;
     }
 
-    const existing = await userModel.findByEmail(email.toLowerCase());
+    const existing = await userModel.findByEmail(email);
     if (existing) {
-      res.status(409).json({ message: 'Email ja cadastrado.' });
+      res.status(409).json({ message: 'Email admin ja cadastrado. Use outro email para criar uma nova empresa.' });
       return;
     }
 
@@ -50,10 +56,10 @@ async function register(req, res, next) {
       await userModel.create({
         companyId: company.id,
         name: adminName,
-        email: email.toLowerCase(),
+        email,
         passwordHash,
         role: 'admin',
-        platformOwner: platformOwnerEmail && email.toLowerCase() === platformOwnerEmail ? 1 : 0,
+        platformOwner: platformOwnerEmail && email === platformOwnerEmail ? 1 : 0,
         active: 1,
       });
       await subscriptionModel.create({
@@ -74,13 +80,14 @@ async function register(req, res, next) {
 
 async function login(req, res, next) {
   try {
-    const { email, password } = req.body;
+    const email = (req.body.email || '').trim().toLowerCase();
+    const password = String(req.body.password || '');
     if (!email || !password) {
       res.status(400).json({ message: 'Informe email e password.' });
       return;
     }
 
-    const user = await userModel.findByEmail(email.toLowerCase());
+    const user = await userModel.findByEmail(email);
     if (!user || !verifyPassword(password, user.password_hash) || user.active !== 1) {
       res.status(401).json({ message: 'Credenciais invalidas.' });
       return;
