@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: lavajato-saas-v2
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run migrate && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_EXPIRES_IN
+        value: 7d

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel | LavaJato SaaS Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'ui-sans-serif', 'system-ui'] }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body class="min-h-screen bg-slate-950 font-sans text-slate-100">
+  <div class="grid min-h-screen md:grid-cols-[250px_1fr]">
+    <aside class="border-r border-slate-800 bg-slate-900 p-4">
+      <div class="rounded-2xl border border-slate-700 bg-slate-800 p-4">
+        <p class="text-xs uppercase tracking-[0.28em] text-cyan-300">LavaJato SaaS</p>
+        <h1 id="company-name" class="mt-2 text-lg font-bold">Empresa</h1>
+        <p id="company-plan" class="text-sm text-slate-300">Plano</p>
+      </div>
+      <nav id="menu" class="mt-4 space-y-2">
+        <button data-view="dashboard" class="w-full rounded-xl bg-cyan-500 px-3 py-2 text-left text-sm font-semibold text-slate-900">Dashboard</button>
+        <button data-view="clientes" class="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800">Clientes</button>
+        <button data-view="veiculos" class="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800">Veiculos</button>
+        <button data-view="servicos" class="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800">Servicos</button>
+        <button data-view="funcionarios" class="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800">Funcionarios</button>
+        <button data-view="agendamentos" class="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800">Agendamentos</button>
+        <button data-view="caixa" class="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800">Caixa</button>
+        <button data-view="assinatura" class="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800">Assinatura</button>
+      </nav>
+      <button id="logout-btn" class="mt-4 w-full rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800">Sair</button>
+    </aside>
+
+    <main class="p-4 md:p-6">
+      <p id="global-message" class="mb-3 min-h-6 text-sm text-slate-300"></p>
+
+      <section data-screen="dashboard" class="space-y-4">
+        <div class="grid gap-3 md:grid-cols-3">
+          <article class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+            <p class="text-sm text-slate-400">Total do Dia</p>
+            <p id="metric-total-dia" class="mt-1 text-2xl font-bold text-cyan-300">R$ 0,00</p>
+          </article>
+          <article class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+            <p class="text-sm text-slate-400">Servicos do Dia</p>
+            <p id="metric-servicos-dia" class="mt-1 text-2xl font-bold">0</p>
+          </article>
+          <article class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+            <p class="text-sm text-slate-400">Total do Mes</p>
+            <p id="metric-total-mes" class="mt-1 text-2xl font-bold text-emerald-300">R$ 0,00</p>
+          </article>
+        </div>
+        <article class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+          <h2 class="mb-4 text-lg font-semibold">Grafico Financeiro (14 dias)</h2>
+          <canvas id="chart-canvas" height="120"></canvas>
+        </article>
+      </section>
+
+      <section data-screen="clientes" class="hidden space-y-4">
+        <form id="cliente-form" class="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 md:grid-cols-4">
+          <input type="hidden" name="id" />
+          <input name="nome" placeholder="Nome" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="telefone" placeholder="Telefone" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="email" placeholder="Email" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="observacoes" placeholder="Observacoes" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <button class="rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-900">Salvar Cliente</button>
+        </form>
+        <div id="clientes-list" class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 p-4"></div>
+      </section>
+
+      <section data-screen="veiculos" class="hidden space-y-4">
+        <form id="veiculo-form" class="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 md:grid-cols-4">
+          <input type="hidden" name="id" />
+          <select name="clienteId" id="veiculo-cliente" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2"></select>
+          <input name="placa" placeholder="Placa" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="marca" placeholder="Marca" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="modelo" placeholder="Modelo" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="cor" placeholder="Cor" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="ano" type="number" placeholder="Ano" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <button class="rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-900">Salvar Veiculo</button>
+        </form>
+        <div id="veiculos-list" class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 p-4"></div>
+      </section>
+
+      <section data-screen="servicos" class="hidden space-y-4">
+        <form id="servico-form" class="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 md:grid-cols-4">
+          <input type="hidden" name="id" />
+          <input name="nome" placeholder="Nome do servico" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="descricao" placeholder="Descricao" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="preco" type="number" step="0.01" placeholder="Preco" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="duracaoMinutos" type="number" placeholder="Duracao (min)" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <select name="ativo" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2">
+            <option value="true">Ativo</option>
+            <option value="false">Inativo</option>
+          </select>
+          <button class="rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-900">Salvar Servico</button>
+        </form>
+        <div id="servicos-list" class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 p-4"></div>
+      </section>
+
+      <section data-screen="funcionarios" class="hidden space-y-4">
+        <form id="funcionario-form" class="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 md:grid-cols-4">
+          <input type="hidden" name="id" />
+          <input name="nome" placeholder="Nome" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="cargo" placeholder="Cargo" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="telefone" placeholder="Telefone" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="salario" type="number" step="0.01" placeholder="Salario" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <select name="ativo" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2">
+            <option value="true">Ativo</option>
+            <option value="false">Inativo</option>
+          </select>
+          <button class="rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-900">Salvar Funcionario</button>
+        </form>
+        <div id="funcionarios-list" class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 p-4"></div>
+      </section>
+
+      <section data-screen="agendamentos" class="hidden space-y-4">
+        <form id="agendamento-filter" class="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 md:grid-cols-4">
+          <input name="data" type="date" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <select name="status" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2">
+            <option value="">Todos status</option>
+            <option>Aguardando</option>
+            <option>Em Lavagem</option>
+            <option>Finalizado</option>
+          </select>
+          <button class="rounded-xl border border-slate-700 px-4 py-2">Filtrar</button>
+        </form>
+        <form id="agendamento-form" class="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 md:grid-cols-4">
+          <input type="hidden" name="id" />
+          <select name="clienteId" id="agenda-cliente" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2"></select>
+          <select name="veiculoId" id="agenda-veiculo" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2"></select>
+          <select name="servicoId" id="agenda-servico" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2"></select>
+          <select name="funcionarioId" id="agenda-funcionario" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2"></select>
+          <input name="data" type="date" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="hora" type="time" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <select name="status" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2">
+            <option>Aguardando</option>
+            <option>Em Lavagem</option>
+            <option>Finalizado</option>
+          </select>
+          <input name="valor" type="number" step="0.01" placeholder="Valor" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="observacoes" placeholder="Observacoes" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <button class="rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-900">Salvar Agendamento</button>
+        </form>
+        <div id="agendamentos-list" class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 p-4"></div>
+      </section>
+
+      <section data-screen="caixa" class="hidden space-y-4">
+        <form id="caixa-form" class="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 md:grid-cols-4">
+          <select name="tipo" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2">
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saida</option>
+          </select>
+          <input name="categoria" placeholder="Categoria" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="descricao" placeholder="Descricao" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <input name="valor" type="number" step="0.01" placeholder="Valor" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <select name="formaPagamento" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2">
+            <option value="dinheiro">Dinheiro</option>
+            <option value="pix">Pix</option>
+            <option value="debito">Debito</option>
+            <option value="credito">Credito</option>
+            <option value="boleto">Boleto</option>
+            <option value="transferencia">Transferencia</option>
+          </select>
+          <input name="dataMovimento" type="date" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <button class="rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-900">Lancar no Caixa</button>
+        </form>
+        <form id="relatorio-form" class="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 md:grid-cols-4">
+          <input name="mes" type="month" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <button class="rounded-xl border border-slate-700 px-4 py-2">Gerar Relatorio Mensal</button>
+        </form>
+        <div id="relatorio-box" class="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300"></div>
+        <div id="caixa-list" class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 p-4"></div>
+      </section>
+
+      <section data-screen="assinatura" class="hidden space-y-4">
+        <form id="assinatura-form" class="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 md:grid-cols-4">
+          <select name="plano" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2">
+            <option value="trial">Plano Trial</option>
+            <option value="ativo">Plano Ativo</option>
+            <option value="suspenso">Plano Suspenso</option>
+          </select>
+          <select name="statusAssinatura" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2">
+            <option value="trial">Trial</option>
+            <option value="ativo">Ativo</option>
+            <option value="suspenso">Suspenso</option>
+          </select>
+          <input name="dataVencimento" type="date" required class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2" />
+          <button class="rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-900">Atualizar Assinatura</button>
+        </form>
+        <div id="assinatura-info" class="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300"></div>
+      </section>
+    </main>
+  </div>
+  <script src="/js/app.js"></script>
+</body>
+</html>

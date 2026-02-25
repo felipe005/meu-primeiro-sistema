@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LavaJato SaaS Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'ui-sans-serif', 'system-ui'] },
+          colors: {
+            ink: '#0b1220',
+            panel: '#0f172a',
+            accent: '#06b6d4',
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body class="min-h-screen bg-[radial-gradient(circle_at_top,_#0e1a33_0%,_#060b17_45%,_#03050b_100%)] text-slate-100">
+  <main class="mx-auto flex min-h-screen max-w-6xl items-center px-6 py-10">
+    <section class="grid w-full overflow-hidden rounded-3xl border border-slate-700/50 bg-slate-900/70 shadow-2xl backdrop-blur md:grid-cols-2">
+      <aside class="relative hidden overflow-hidden border-r border-slate-700/50 bg-gradient-to-b from-cyan-500/20 via-slate-900 to-slate-950 p-10 md:block">
+        <div class="absolute -top-16 -right-16 h-52 w-52 rounded-full bg-cyan-400/20 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 h-52 w-52 rounded-full bg-indigo-500/20 blur-3xl"></div>
+        <p class="text-xs uppercase tracking-[0.3em] text-cyan-300">LavaJato SaaS Pro</p>
+        <h1 class="mt-4 text-4xl font-bold leading-tight">Gestao profissional para lava-jatos</h1>
+        <p class="mt-4 text-sm text-slate-300">
+          Multiempresa com isolamento total de dados, controle financeiro, agenda operacional e dashboard em tempo real.
+        </p>
+      </aside>
+
+      <div class="p-7 md:p-10">
+        <div class="mb-6 flex gap-2 rounded-2xl bg-slate-800 p-1">
+          <button id="tab-login" class="w-full rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-900">Entrar</button>
+          <button id="tab-register" class="w-full rounded-xl px-4 py-2 text-sm font-semibold text-slate-200">Criar Empresa</button>
+        </div>
+
+        <form id="form-login" class="space-y-4">
+          <div>
+            <label class="mb-1 block text-sm text-slate-300">Email</label>
+            <input name="email" type="email" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 outline-none ring-cyan-400 transition focus:ring-2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm text-slate-300">Senha</label>
+            <input name="senha" type="password" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 outline-none ring-cyan-400 transition focus:ring-2" />
+          </div>
+          <button class="w-full rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-slate-900 transition hover:bg-cyan-300">Acessar Painel</button>
+        </form>
+
+        <form id="form-register" class="hidden space-y-4">
+          <div>
+            <label class="mb-1 block text-sm text-slate-300">Nome da Empresa</label>
+            <input name="nome" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 outline-none ring-cyan-400 transition focus:ring-2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm text-slate-300">Email</label>
+            <input name="email" type="email" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 outline-none ring-cyan-400 transition focus:ring-2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm text-slate-300">Senha</label>
+            <input name="senha" type="password" minlength="6" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 outline-none ring-cyan-400 transition focus:ring-2" />
+          </div>
+          <button class="w-full rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-slate-900 transition hover:bg-cyan-300">Criar Empresa</button>
+        </form>
+
+        <p id="auth-message" class="mt-4 min-h-6 text-sm text-slate-300"></p>
+      </div>
+    </section>
+  </main>
+  <script src="/js/auth.js"></script>
+</body>
+</html>
