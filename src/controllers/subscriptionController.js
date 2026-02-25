@@ -78,6 +78,17 @@ async function markPaymentPaid(req, res, next) {
       res.status(404).json({ message: 'Pagamento nao encontrado.' });
       return;
     }
+
+    const subscription = await subscriptionModel.findByCompany(req.auth.companyId);
+    const baseDate = subscription?.nextBillingDate || new Date().toISOString().slice(0, 10);
+    const next = new Date(baseDate);
+    if (!Number.isNaN(next.getTime())) {
+      next.setDate(next.getDate() + 30);
+      await subscriptionModel.activateAndSetNextBilling(req.auth.companyId, next.toISOString().slice(0, 10));
+    } else {
+      await subscriptionModel.setPlanStatusByCompany(req.auth.companyId, 'active');
+    }
+
     res.json({ message: 'Pagamento marcado como pago.' });
   } catch (error) {
     next(error);

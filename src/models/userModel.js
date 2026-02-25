@@ -1,10 +1,10 @@
 const db = require('../utils/db');
 
-function create({ companyId, name, email, passwordHash, role = 'member', active = 1 }) {
+function create({ companyId, name, email, passwordHash, role = 'member', active = 1, platformOwner = 0 }) {
   return db.run(
-    `INSERT INTO users (company_id, name, email, password_hash, role, active)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [companyId, name, email, passwordHash, role, active]
+    `INSERT INTO users (company_id, name, email, password_hash, role, platform_owner, active)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [companyId, name, email, passwordHash, role, Number(platformOwner ? 1 : 0), active]
   );
 }
 
@@ -18,7 +18,7 @@ function findById(userId) {
 
 function listByCompany(companyId) {
   return db.all(
-    `SELECT id, name, email, role, active, created_at AS createdAt
+    `SELECT id, name, email, role, platform_owner AS platformOwner, active, created_at AS createdAt
      FROM users
      WHERE company_id = ?
      ORDER BY created_at DESC`,

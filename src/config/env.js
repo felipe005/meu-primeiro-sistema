@@ -4,4 +4,5 @@ module.exports = {
   port: Number(process.env.PORT) || 3000,
   dbPath: process.env.DB_PATH || path.join(process.cwd(), 'dados.db'),
   sessionDays: Number(process.env.SESSION_DAYS) || 7,
+  platformOwnerEmail: (process.env.PLATFORM_OWNER_EMAIL || 'felipemarques27052003@gmail.com').toLowerCase(),
 };

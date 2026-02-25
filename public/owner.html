@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dono da Plataforma | SaaS</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="panel-body">
+  <div class="shell">
+    <header class="topbar card-shell">
+      <div>
+        <h1 id="owner-title">Painel do Dono</h1>
+        <p class="muted">Gestao de empresas SaaS</p>
+      </div>
+      <div class="topbar-actions">
+        <button id="go-app-btn" class="ghost-btn">Ir para minha empresa</button>
+        <button id="owner-logout-btn" class="ghost-btn">Sair</button>
+      </div>
+    </header>
+
+    <section id="owner-metrics" class="metrics-row"></section>
+
+    <section class="card-shell block-pad">
+      <div class="section-head compact">
+        <h2>Empresas Cadastradas</h2>
+      </div>
+      <div class="search-wrap">
+        <input type="text" id="owner-search" placeholder="Buscar empresa..." />
+      </div>
+      <div id="owner-companies-list" class="stack-list"></div>
+    </section>
+
+    <p id="owner-message" class="app-message"></p>
+  </div>
+  <script src="/js/owner.js"></script>
+</body>
+</html>

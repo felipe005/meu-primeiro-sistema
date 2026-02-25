@@ -656,6 +656,10 @@ function initLocalModules() {
 
 async function loadMe() {
   state.me = await api('/api/auth/me');
+  if (state.me.user?.platformOwner) {
+    window.location.href = '/owner';
+    return;
+  }
   nodes.companyTitle.textContent = state.me.company.name;
   nodes.companySubtitle.textContent = `${state.me.company.businessType} | ${state.me.user.name}`;
   nodes.planBadge.textContent = state.me.subscription.planStatus === 'active' ? 'Plano ativo' : 'Plano inativo';

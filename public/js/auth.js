@@ -33,7 +33,8 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
   const data = Object.fromEntries(formData.entries());
   try {
     await request('/api/auth/login', 'POST', data);
-    window.location.href = '/app';
+    const me = await request('/api/auth/me', 'GET');
+    window.location.href = me.user?.platformOwner ? '/owner' : '/app';
   } catch (error) {
     message.textContent = error.message;
   }
@@ -55,8 +56,8 @@ document.getElementById('register-form').addEventListener('submit', async (event
 
 (async function checkSession() {
   try {
-    await request('/api/auth/me', 'GET');
-    window.location.href = '/app';
+    const me = await request('/api/auth/me', 'GET');
+    window.location.href = me.user?.platformOwner ? '/owner' : '/app';
   } catch (error) {
     // visitante sem sessao
   }

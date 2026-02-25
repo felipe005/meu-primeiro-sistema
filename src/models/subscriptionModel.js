@@ -54,6 +54,24 @@ function markPaymentPaid(companyId, paymentId) {
   );
 }
 
+function setPlanStatusByCompany(companyId, planStatus) {
+  return db.run(
+    `UPDATE subscriptions
+     SET plan_status = ?, updated_at = CURRENT_TIMESTAMP
+     WHERE company_id = ?`,
+    [planStatus, companyId]
+  );
+}
+
+function activateAndSetNextBilling(companyId, nextBillingDate) {
+  return db.run(
+    `UPDATE subscriptions
+     SET plan_status = 'active', next_billing_date = ?, updated_at = CURRENT_TIMESTAMP
+     WHERE company_id = ?`,
+    [nextBillingDate || null, companyId]
+  );
+}
+
 module.exports = {
   create,
   findByCompany,
@@ -61,4 +79,6 @@ module.exports = {
   listPayments,
   createPayment,
   markPaymentPaid,
+  setPlanStatusByCompany,
+  activateAndSetNextBilling,
 };

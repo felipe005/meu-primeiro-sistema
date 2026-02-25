@@ -1,5 +1,7 @@
 const sessionModel = require('../models/sessionModel');
+const subscriptionModel = require('../models/subscriptionModel');
 const { parseCookies } = require('../utils/cookies');
+const { platformOwnerEmail } = require('../config/env');
 
 async function requireAuth(req, res, next) {
   try {
@@ -20,6 +22,8 @@ async function requireAuth(req, res, next) {
       return;
     }
 
+    const isPlatformOwner = session.platformOwner === 1 || (platformOwnerEmail && session.email === platformOwnerEmail);
+
     req.auth = {
       token,
       userId: session.userId,
@@ -27,6 +31,7 @@ async function requireAuth(req, res, next) {
       name: session.name,
       email: session.email,
       role: session.role,
+      isPlatformOwner,
       companyName: session.companyName,
       businessType: session.businessType,
       planStatus: session.planStatus || 'inactive',
@@ -41,16 +46,40 @@ async function requireAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  if (req.auth.role !== 'admin') {
+  if (req.auth.role !== 'admin' && !req.auth.isPlatformOwner) {
     res.status(403).json({ message: 'Acesso permitido apenas para administradores.' });
     return;
   }
   next();
 }
 
-function requireActiveSubscription(req, res, next) {
+async function requireActiveSubscription(req, res, next) {
+  if (req.auth.isPlatformOwner) return next();
+
   if (req.auth.planStatus !== 'active') {
     res.status(402).json({ message: 'Plano inativo. Regularize a assinatura para continuar.' });
+    return;
+  }
+
+  if (req.auth.nextBillingDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = new Date(req.auth.nextBillingDate);
+    due.setHours(0, 0, 0, 0);
+
+    if (!Number.isNaN(due.getTime()) && today > due) {
+      await subscriptionModel.setPlanStatusByCompany(req.auth.companyId, 'inactive');
+      res.status(402).json({ message: 'Assinatura vencida. Plano bloqueado ate regularizacao.' });
+      return;
+    }
+  }
+
+  next();
+}
+
+function requirePlatformOwner(req, res, next) {
+  if (!req.auth.isPlatformOwner) {
+    res.status(403).json({ message: 'Acesso permitido apenas para dono da plataforma.' });
     return;
   }
   next();
@@ -60,4 +89,5 @@ module.exports = {
   requireAuth,
   requireAdmin,
   requireActiveSubscription,
+  requirePlatformOwner,
 };

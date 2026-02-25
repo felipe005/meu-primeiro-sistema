@@ -16,6 +16,7 @@ function findWithContext(token) {
             u.name,
             u.email,
             u.role,
+            u.platform_owner AS platformOwner,
             u.active,
             c.name AS companyName,
             c.business_type AS businessType,

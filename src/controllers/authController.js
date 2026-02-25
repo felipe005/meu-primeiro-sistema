@@ -3,6 +3,7 @@ const userModel = require('../models/userModel');
 const subscriptionModel = require('../models/subscriptionModel');
 const sessionModel = require('../models/sessionModel');
 const db = require('../utils/db');
+const { platformOwnerEmail } = require('../config/env');
 const { hashPassword, verifyPassword } = require('../utils/password');
 const { generateSessionToken, expiresAtISOString } = require('../utils/session');
 
@@ -48,6 +49,7 @@ async function register(req, res, next) {
         email: email.toLowerCase(),
         passwordHash,
         role: 'admin',
+        platformOwner: platformOwnerEmail && email.toLowerCase() === platformOwnerEmail ? 1 : 0,
         active: 1,
       });
       await subscriptionModel.create({
@@ -111,6 +113,7 @@ async function me(req, res) {
       name: req.auth.name,
       email: req.auth.email,
       role: req.auth.role,
+      platformOwner: req.auth.isPlatformOwner,
     },
     company: {
       id: req.auth.companyId,

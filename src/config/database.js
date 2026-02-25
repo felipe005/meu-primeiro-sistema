@@ -28,6 +28,7 @@ const schemaStatements = [
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'member' CHECK(role IN ('admin', 'member')),
+    platform_owner INTEGER NOT NULL DEFAULT 0 CHECK(platform_owner IN (0, 1)),
     active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0, 1)),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
@@ -168,6 +169,7 @@ const migrationStatements = [
   'ALTER TABLE clients ADD COLUMN next_due_date TEXT;',
   'ALTER TABLE clients ADD COLUMN last_payment_date TEXT;',
   "ALTER TABLE clients ADD COLUMN payment_status TEXT NOT NULL DEFAULT 'pendente';",
+  "ALTER TABLE users ADD COLUMN platform_owner INTEGER NOT NULL DEFAULT 0;",
 ];
 
 const seedStatements = [

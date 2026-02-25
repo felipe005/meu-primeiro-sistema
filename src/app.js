@@ -9,7 +9,8 @@ const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const teamRoutes = require('./routes/teamRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
-const { requireAuth, requireAdmin, requireActiveSubscription } = require('./middlewares/authMiddleware');
+const platformRoutes = require('./routes/platformRoutes');
+const { requireAuth, requireAdmin, requireActiveSubscription, requirePlatformOwner } = require('./middlewares/authMiddleware');
 const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
 
 const app = express();
@@ -26,6 +27,10 @@ app.get('/app', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'public', 'app.html'));
 });
 
+app.get('/owner', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'owner.html'));
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', requireAuth, requireActiveSubscription, dashboardRoutes);
 app.use('/api/users', requireAuth, requireActiveSubscription, requireAdmin, userRoutes);
@@ -34,6 +39,7 @@ app.use('/api/services', requireAuth, requireActiveSubscription, serviceRoutes);
 app.use('/api/team', requireAuth, requireActiveSubscription, teamRoutes);
 app.use('/api/appointments', requireAuth, requireActiveSubscription, appointmentRoutes);
 app.use('/api/subscription', requireAuth, subscriptionRoutes);
+app.use('/api/platform', requireAuth, requirePlatformOwner, platformRoutes);
 
 app.use('/api', notFound);
 app.use(errorHandler);
