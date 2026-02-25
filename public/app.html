@@ -1,18 +1,18 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>El Shadai | Painel</title>
+  <title>Lava-Jato SaaS | Painel</title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body class="panel-body">
   <div class="shell">
     <header class="topbar card-shell">
       <div class="brand-row">
-        <div class="brand-avatar" id="brand-avatar">ES</div>
+        <div class="brand-avatar" id="brand-avatar">LJ</div>
         <div>
-          <h1 id="company-title">El Shadai</h1>
+          <h1 id="company-title">Lava-Jato</h1>
           <p id="company-subtitle" class="muted"></p>
         </div>
       </div>
@@ -22,16 +22,18 @@
       </div>
     </header>
 
+    <div id="billing-alert" class="alert-banner hidden"></div>
+
     <nav class="tabbar card-shell" id="tabbar">
       <button class="tab-btn active" data-tab="agenda">Agenda</button>
       <button class="tab-btn" data-tab="services">Servicos</button>
       <button class="tab-btn" data-tab="team">Equipe</button>
-      <button class="tab-btn" data-tab="clients">Clientes</button>
+      <button class="tab-btn" data-tab="management">Gestao</button>
       <button class="tab-btn" data-tab="billing">Assinatura</button>
-      <button class="tab-btn disabled" type="button">Caixa</button>
-      <button class="tab-btn disabled" type="button">Compras</button>
-      <button class="tab-btn disabled" type="button">Estoque</button>
-      <button class="tab-btn disabled" type="button">Mapa</button>
+      <button class="tab-btn" data-tab="cash">Caixa</button>
+      <button class="tab-btn" data-tab="purchases">Compras</button>
+      <button class="tab-btn" data-tab="stock">Estoque</button>
+      <button class="tab-btn" data-tab="map">Mapa</button>
     </nav>
 
     <main>
@@ -55,7 +57,7 @@
         <form id="appointment-form" class="card-shell form-grid hidden">
           <input type="hidden" name="id" />
           <input type="text" name="clientName" placeholder="Nome do cliente" required />
-          <input type="text" name="vehiclePlate" placeholder="Placa" />
+          <input type="text" name="vehiclePlate" placeholder="Placa (ABC-1234 / ABC-1D23)" />
           <input type="text" name="vehicleModel" placeholder="Modelo" />
           <input type="text" name="phone" placeholder="Telefone" />
           <select name="serviceId" id="appointment-service"></select>
@@ -124,43 +126,199 @@
         <div id="team-list" class="stack-list"></div>
       </section>
 
-      <section class="view" id="view-clients">
-        <div class="card-shell section-head">
-          <h2>Clientes</h2>
-          <button class="primary-btn" id="new-client-btn">+ Novo Cliente</button>
+      <section class="view" id="view-management">
+        <div id="admin-only-note" class="card-shell warning-note hidden">
+          Esta area e exclusiva para admin da empresa.
         </div>
-        <form id="client-form" class="card-shell form-grid hidden">
-          <input type="hidden" name="id" />
-          <input type="text" name="name" placeholder="Nome" required />
-          <input type="email" name="email" placeholder="Email" />
-          <input type="text" name="phone" placeholder="Telefone" />
-          <select name="status">
-            <option value="active">Ativo</option>
-            <option value="lead">Lead</option>
-            <option value="inactive">Inativo</option>
-          </select>
-          <input type="text" name="notes" placeholder="Observacoes" />
-          <div class="form-actions">
-            <button type="submit" class="primary-btn">Salvar Cliente</button>
-            <button type="button" class="ghost-btn" id="cancel-client-btn">Cancelar</button>
+
+        <div id="management-content" class="view-grid">
+          <div class="card-shell block-pad">
+            <div class="section-head compact">
+              <h2>Controle de Clientes</h2>
+              <button class="primary-btn" id="new-client-btn">+ Novo Cliente</button>
+            </div>
+
+            <form id="client-form" class="form-grid hidden">
+              <input type="hidden" name="id" />
+              <input type="text" name="name" placeholder="Nome do cliente" required />
+              <input type="email" name="email" placeholder="Email" />
+              <input type="text" name="phone" placeholder="Telefone" />
+              <input type="text" name="vehiclePlate" id="client-plate" placeholder="Placa" />
+              <input type="text" name="vehicleModel" placeholder="Modelo do veiculo" />
+              <select name="plateType" id="client-plate-type">
+                <option value="nao_informado">Tipo da placa (auto)</option>
+                <option value="antiga">Antiga</option>
+                <option value="mercosul">Mercosul</option>
+              </select>
+              <input type="number" step="0.01" min="0" name="monthlyFee" placeholder="Mensalidade (R$)" />
+              <input type="date" name="nextDueDate" />
+              <select name="paymentStatus">
+                <option value="pendente">Mensalidade pendente</option>
+                <option value="em_dia">Mensalidade em dia</option>
+                <option value="atrasado">Mensalidade atrasada</option>
+              </select>
+              <select name="status">
+                <option value="active">Ativo</option>
+                <option value="lead">Lead</option>
+                <option value="inactive">Inativo</option>
+              </select>
+              <input type="text" name="notes" placeholder="Observacoes" />
+              <div class="form-actions">
+                <button type="submit" class="primary-btn">Salvar Cliente</button>
+                <button type="button" class="ghost-btn" id="cancel-client-btn">Cancelar</button>
+              </div>
+            </form>
+
+            <div id="clients-list" class="stack-list"></div>
           </div>
-        </form>
-        <div id="clients-list" class="stack-list"></div>
+
+          <div class="card-shell block-pad">
+            <div class="section-head compact">
+              <h2>Pagamentos Recebidos</h2>
+            </div>
+            <form id="client-payment-form" class="form-grid">
+              <select name="clientId" id="client-payment-client" required></select>
+              <input type="number" step="0.01" min="0.01" name="amount" placeholder="Valor pago" required />
+              <select name="method">
+                <option value="pix">Pix</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="cartao">Cartao</option>
+              </select>
+              <input type="text" name="reference" placeholder="Referencia (opcional)" />
+              <div class="form-actions">
+                <button type="submit" class="primary-btn">Registrar Pagamento</button>
+              </div>
+            </form>
+            <div id="client-payments-list" class="stack-list compact-list"></div>
+          </div>
+        </div>
       </section>
 
       <section class="view" id="view-billing">
-        <div class="card-shell section-head"><h2>Assinatura</h2></div>
-        <form id="subscription-form" class="card-shell form-grid">
-          <select name="planStatus">
-            <option value="active">Plano Ativo</option>
-            <option value="inactive">Plano Inativo</option>
-          </select>
-          <input type="number" step="0.01" min="0" name="monthlyFee" placeholder="Mensalidade" required />
-          <input type="date" name="nextBillingDate" />
-          <div class="form-actions">
-            <button type="submit" class="primary-btn">Atualizar Assinatura</button>
+        <div class="view-grid">
+          <div class="card-shell block-pad">
+            <div class="section-head compact">
+              <h2>Assinatura SaaS</h2>
+            </div>
+            <form id="subscription-form" class="form-grid">
+              <select name="planStatus">
+                <option value="active">Plano Ativo</option>
+                <option value="inactive">Plano Inativo</option>
+              </select>
+              <input type="number" step="0.01" min="0" name="monthlyFee" placeholder="Mensalidade" required />
+              <input type="date" name="nextBillingDate" />
+              <input type="text" name="pixKey" id="pix-key" placeholder="Chave Pix" />
+              <div class="form-actions">
+                <button type="submit" class="primary-btn">Atualizar Assinatura</button>
+              </div>
+            </form>
           </div>
-        </form>
+
+          <div class="card-shell block-pad">
+            <div class="section-head compact">
+              <h2>Pagamento via Pix</h2>
+            </div>
+            <p class="muted" id="pix-copy-text">Informe a chave Pix para gerar QR Code.</p>
+            <img id="pix-qrcode" class="pix-qrcode hidden" alt="QR Code Pix" />
+
+            <form id="subscription-payment-form" class="form-grid">
+              <input type="number" step="0.01" min="0.01" name="amount" placeholder="Valor" required />
+              <input type="date" name="dueDate" />
+              <input type="text" name="reference" placeholder="Referencia" />
+              <select name="status">
+                <option value="pending">Pendente</option>
+                <option value="paid">Pago</option>
+              </select>
+              <div class="form-actions">
+                <button type="submit" class="primary-btn">Adicionar Cobranca</button>
+              </div>
+            </form>
+
+            <div id="subscription-payments-list" class="stack-list compact-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-cash">
+        <div id="cash-metrics" class="metrics-row"></div>
+        <div class="card-shell block-pad">
+          <div class="section-head compact"><h2>Lancar no Caixa</h2></div>
+          <form id="cash-form" class="form-grid">
+            <select name="type">
+              <option value="entrada">Entrada</option>
+              <option value="saida">Saida</option>
+            </select>
+            <input type="text" name="category" placeholder="Categoria" required />
+            <input type="number" step="0.01" min="0.01" name="amount" placeholder="Valor" required />
+            <input type="date" name="date" required />
+            <input type="text" name="description" placeholder="Descricao" />
+            <div class="form-actions"><button type="submit" class="primary-btn">Salvar no Caixa</button></div>
+          </form>
+        </div>
+        <div id="cash-list" class="stack-list"></div>
+      </section>
+
+      <section class="view" id="view-purchases">
+        <div class="card-shell block-pad">
+          <div class="section-head compact"><h2>Compras</h2></div>
+          <form id="purchase-form" class="form-grid">
+            <input type="text" name="supplier" placeholder="Fornecedor" required />
+            <input type="text" name="item" placeholder="Item comprado" required />
+            <input type="number" step="0.01" min="0.01" name="quantity" placeholder="Quantidade" required />
+            <input type="number" step="0.01" min="0.01" name="unitPrice" placeholder="Valor unitario" required />
+            <input type="date" name="date" required />
+            <select name="status">
+              <option value="pedido">Pedido</option>
+              <option value="recebido">Recebido</option>
+            </select>
+            <div class="form-actions"><button type="submit" class="primary-btn">Salvar Compra</button></div>
+          </form>
+        </div>
+        <div id="purchases-list" class="stack-list"></div>
+      </section>
+
+      <section class="view" id="view-stock">
+        <div id="stock-metrics" class="metrics-row"></div>
+        <div class="view-grid">
+          <div class="card-shell block-pad">
+            <div class="section-head compact"><h2>Cadastro de Item</h2></div>
+            <form id="stock-form" class="form-grid">
+              <input type="text" name="name" placeholder="Nome do item" required />
+              <input type="text" name="unit" placeholder="Unidade (L, UN, KG)" required />
+              <input type="number" step="0.01" min="0" name="quantity" placeholder="Estoque atual" required />
+              <input type="number" step="0.01" min="0" name="minQuantity" placeholder="Estoque minimo" required />
+              <div class="form-actions"><button type="submit" class="primary-btn">Salvar Item</button></div>
+            </form>
+          </div>
+
+          <div class="card-shell block-pad">
+            <div class="section-head compact"><h2>Movimentacao</h2></div>
+            <form id="stock-move-form" class="form-grid">
+              <select name="itemId" id="stock-item-select" required></select>
+              <select name="type">
+                <option value="entrada">Entrada</option>
+                <option value="saida">Saida</option>
+              </select>
+              <input type="number" step="0.01" min="0.01" name="quantity" placeholder="Quantidade" required />
+              <input type="text" name="reason" placeholder="Motivo" />
+              <div class="form-actions"><button type="submit" class="primary-btn">Movimentar</button></div>
+            </form>
+          </div>
+        </div>
+        <div id="stock-list" class="stack-list"></div>
+      </section>
+
+      <section class="view" id="view-map">
+        <div class="card-shell block-pad">
+          <div class="section-head compact"><h2>Mapa de Atendimento</h2></div>
+          <form id="map-form" class="form-grid">
+            <input type="text" name="name" placeholder="Nome do ponto" required />
+            <input type="text" name="address" placeholder="Endereco" required />
+            <div class="form-actions"><button type="submit" class="primary-btn">Salvar Ponto</button></div>
+          </form>
+        </div>
+        <iframe id="map-frame" class="map-frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <div id="map-points-list" class="stack-list"></div>
       </section>
 
       <p id="app-message" class="app-message"></p>

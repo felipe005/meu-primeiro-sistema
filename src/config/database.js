@@ -16,6 +16,7 @@ const schemaStatements = [
     company_id INTEGER NOT NULL UNIQUE,
     plan_status TEXT NOT NULL DEFAULT 'active' CHECK(plan_status IN ('active', 'inactive')),
     monthly_fee REAL NOT NULL DEFAULT 99.90,
+    pix_key TEXT,
     next_billing_date TEXT,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
@@ -44,6 +45,13 @@ const schemaStatements = [
     name TEXT NOT NULL,
     email TEXT,
     phone TEXT,
+    vehicle_plate TEXT,
+    vehicle_model TEXT,
+    plate_type TEXT NOT NULL DEFAULT 'nao_informado' CHECK(plate_type IN ('mercosul', 'antiga', 'nao_informado')),
+    monthly_fee REAL NOT NULL DEFAULT 0,
+    next_due_date TEXT,
+    last_payment_date TEXT,
+    payment_status TEXT NOT NULL DEFAULT 'pendente' CHECK(payment_status IN ('em_dia', 'pendente', 'atrasado')),
     status TEXT NOT NULL DEFAULT 'lead' CHECK(status IN ('lead', 'active', 'inactive')),
     notes TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -123,6 +131,43 @@ const schemaStatements = [
     BEGIN
       UPDATE appointments SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
     END;`,
+  `CREATE TABLE IF NOT EXISTS client_payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    company_id INTEGER NOT NULL,
+    client_id INTEGER NOT NULL,
+    amount REAL NOT NULL,
+    method TEXT NOT NULL DEFAULT 'pix',
+    reference TEXT,
+    paid_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
+    FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE CASCADE
+  );`,
+  `CREATE TABLE IF NOT EXISTS subscription_payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    company_id INTEGER NOT NULL,
+    amount REAL NOT NULL,
+    due_date TEXT,
+    paid_at TEXT,
+    method TEXT NOT NULL DEFAULT 'pix',
+    reference TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'paid')),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
+  );`,
+  'CREATE INDEX IF NOT EXISTS idx_client_payments_company_id ON client_payments(company_id);',
+  'CREATE INDEX IF NOT EXISTS idx_subscription_payments_company_id ON subscription_payments(company_id);',
+];
+
+const migrationStatements = [
+  'ALTER TABLE subscriptions ADD COLUMN pix_key TEXT;',
+  "ALTER TABLE clients ADD COLUMN vehicle_plate TEXT;",
+  "ALTER TABLE clients ADD COLUMN vehicle_model TEXT;",
+  "ALTER TABLE clients ADD COLUMN plate_type TEXT NOT NULL DEFAULT 'nao_informado';",
+  "ALTER TABLE clients ADD COLUMN monthly_fee REAL NOT NULL DEFAULT 0;",
+  'ALTER TABLE clients ADD COLUMN next_due_date TEXT;',
+  'ALTER TABLE clients ADD COLUMN last_payment_date TEXT;',
+  "ALTER TABLE clients ADD COLUMN payment_status TEXT NOT NULL DEFAULT 'pendente';",
 ];
 
 const seedStatements = [
@@ -150,6 +195,15 @@ function initDatabase() {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
       schemaStatements.forEach((statement) => db.run(statement));
+      migrationStatements.forEach((statement) => {
+        db.run(statement, (error) => {
+          if (error && !error.message.includes('duplicate column name')) {
+            // best-effort migration for legacy databases
+            // eslint-disable-next-line no-console
+            console.error('Migration error:', error.message);
+          }
+        });
+      });
       seedStatements.forEach((statement) => db.run(statement));
       db.get('SELECT 1', (error) => {
         if (error) {

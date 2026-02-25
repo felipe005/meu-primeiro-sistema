@@ -7,17 +7,19 @@ const { hashPassword, verifyPassword } = require('../utils/password');
 const { generateSessionToken, expiresAtISOString } = require('../utils/session');
 
 const cookieOptions = 'HttpOnly; Path=/; SameSite=Lax';
+const DEFAULT_PIX_KEY = '71275808123';
 
 async function register(req, res, next) {
   try {
     const {
       companyName,
-      businessType = 'tipo de negocio',
+      businessType = 'Lava-Jato',
       adminName,
       email,
       password,
       monthlyFee = 99.9,
       planStatus = 'active',
+      pixKey = DEFAULT_PIX_KEY,
       nextBillingDate,
     } = req.body;
 
@@ -52,6 +54,7 @@ async function register(req, res, next) {
         companyId: company.id,
         monthlyFee: Number(monthlyFee),
         planStatus: planStatus === 'inactive' ? 'inactive' : 'active',
+        pixKey: pixKey || DEFAULT_PIX_KEY,
         nextBillingDate: nextBillingDate || null,
       });
     });

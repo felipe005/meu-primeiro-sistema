@@ -29,7 +29,7 @@ app.get('/app', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', requireAuth, requireActiveSubscription, dashboardRoutes);
 app.use('/api/users', requireAuth, requireActiveSubscription, requireAdmin, userRoutes);
-app.use('/api/clients', requireAuth, requireActiveSubscription, clientRoutes);
+app.use('/api/clients', requireAuth, requireActiveSubscription, requireAdmin, clientRoutes);
 app.use('/api/services', requireAuth, requireActiveSubscription, serviceRoutes);
 app.use('/api/team', requireAuth, requireActiveSubscription, teamRoutes);
 app.use('/api/appointments', requireAuth, requireActiveSubscription, appointmentRoutes);

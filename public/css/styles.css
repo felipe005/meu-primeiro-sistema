@@ -14,7 +14,7 @@
 
 * {
   box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Manrope', 'Trebuchet MS', 'Segoe UI', sans-serif;
 }
 
 body {
@@ -141,6 +141,10 @@ button { cursor: pointer; }
 .tab-btn.disabled {
   opacity: 0.55;
   pointer-events: none;
+}
+
+.tab-btn.hidden {
+  display: none;
 }
 
 .metrics-row {
@@ -273,10 +277,54 @@ main { display: grid; gap: 12px; }
 
 .icon-btn.danger { border-color: #6e2a3a; color: #ff96a8; }
 
+.tag.danger { border-color: #6e2a3a; color: #ff96a8; }
+
 .app-message {
   min-height: 22px;
   margin: 0;
   color: var(--green);
+}
+
+.alert-banner {
+  border: 1px solid #7b4f24;
+  background: linear-gradient(180deg, rgba(83, 52, 19, 0.95), rgba(47, 28, 9, 0.95));
+  color: #ffd8a6;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.warning-note {
+  padding: 12px;
+  color: #ffd8a6;
+}
+
+.view-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.block-pad { padding: 12px; }
+.compact { padding: 9px; }
+.compact-list { max-height: 420px; overflow: auto; }
+.section-head.compact { padding: 0 0 10px; }
+
+.pix-qrcode {
+  width: 220px;
+  height: 220px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 8px;
+  margin-bottom: 8px;
+}
+
+.map-frame {
+  width: 100%;
+  min-height: 320px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #0b1730;
 }
 
 .muted { color: var(--muted); }
