@@ -141,6 +141,12 @@ function resetAndHide(form) {
   form.classList.add('hidden');
 }
 
+function openForm(form) {
+  form.classList.remove('hidden');
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  form.querySelector('input:not([type="hidden"]), select, textarea')?.focus();
+}
+
 function storageKey(name) {
   return `saas:${state.me.company.id}:${name}`;
 }
@@ -236,7 +242,7 @@ function renderAppointments() {
   nodes.appointmentList.querySelectorAll('[data-edit-appointment]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const item = state.appointments.find((row) => row.id === Number(btn.dataset.editAppointment));
-      nodes.appointmentForm.classList.remove('hidden');
+      openForm(nodes.appointmentForm);
       setFormData(nodes.appointmentForm, {
         id: item.id,
         clientName: item.clientName,
@@ -307,7 +313,7 @@ function renderServices() {
   nodes.serviceList.querySelectorAll('[data-edit-service]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const item = state.services.find((row) => row.id === Number(btn.dataset.editService));
-      nodes.serviceForm.classList.remove('hidden');
+      openForm(nodes.serviceForm);
       setFormData(nodes.serviceForm, item);
     });
   });
@@ -350,7 +356,7 @@ function renderTeam() {
   nodes.teamList.querySelectorAll('[data-edit-team]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const item = state.team.find((row) => row.id === Number(btn.dataset.editTeam));
-      nodes.teamForm.classList.remove('hidden');
+      openForm(nodes.teamForm);
       setFormData(nodes.teamForm, item);
     });
   });
@@ -409,7 +415,7 @@ function renderClients() {
   nodes.clientsList.querySelectorAll('[data-edit-client]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const item = state.clients.find((row) => row.id === Number(btn.dataset.editClient));
-      nodes.clientForm.classList.remove('hidden');
+      openForm(nodes.clientForm);
       setFormData(nodes.clientForm, item);
     });
   });
@@ -753,13 +759,13 @@ function registerEvents() {
   if (nodes.pixKey) nodes.pixKey.addEventListener('input', generatePixQRCode);
   if (nodes.subscriptionForm?.monthlyFee) nodes.subscriptionForm.monthlyFee.addEventListener('input', generatePixQRCode);
 
-  document.getElementById('new-appointment-btn').addEventListener('click', () => nodes.appointmentForm.classList.remove('hidden'));
+  document.getElementById('new-appointment-btn').addEventListener('click', () => openForm(nodes.appointmentForm));
   document.getElementById('cancel-appointment-btn').addEventListener('click', () => resetAndHide(nodes.appointmentForm));
-  document.getElementById('new-service-btn').addEventListener('click', () => nodes.serviceForm.classList.remove('hidden'));
+  document.getElementById('new-service-btn').addEventListener('click', () => openForm(nodes.serviceForm));
   document.getElementById('cancel-service-btn').addEventListener('click', () => resetAndHide(nodes.serviceForm));
-  document.getElementById('new-team-btn').addEventListener('click', () => nodes.teamForm.classList.remove('hidden'));
+  document.getElementById('new-team-btn').addEventListener('click', () => openForm(nodes.teamForm));
   document.getElementById('cancel-team-btn').addEventListener('click', () => resetAndHide(nodes.teamForm));
-  document.getElementById('new-client-btn').addEventListener('click', () => nodes.clientForm.classList.remove('hidden'));
+  document.getElementById('new-client-btn').addEventListener('click', () => openForm(nodes.clientForm));
   document.getElementById('cancel-client-btn').addEventListener('click', () => resetAndHide(nodes.clientForm));
 
   nodes.statusTabs.addEventListener('click', async (event) => {
