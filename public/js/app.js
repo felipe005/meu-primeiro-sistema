@@ -451,13 +451,14 @@ function fillSelectors() {
 }
 
 function generatePixQRCode() {
+  if (!nodes.pixKey || !nodes.pixQrCode || !nodes.pixCopyText) return;
   const pixKey = nodes.pixKey.value?.trim();
   if (!pixKey) {
     nodes.pixQrCode.classList.add('hidden');
     nodes.pixCopyText.textContent = 'Informe a chave Pix para gerar QR Code.';
     return;
   }
-  const amount = Number(nodes.subscriptionForm.monthlyFee.value || state.subscription?.monthlyFee || 0).toFixed(2);
+  const amount = Number(nodes.subscriptionForm?.monthlyFee?.value || state.subscription?.monthlyFee || 0).toFixed(2);
   const payload = `PIX|${pixKey}|${amount}|${state.me.company.name}`;
   nodes.pixQrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}`;
   nodes.pixQrCode.classList.remove('hidden');
@@ -465,6 +466,7 @@ function generatePixQRCode() {
 }
 
 function renderSubscriptionPayments() {
+  if (!nodes.subscriptionPaymentsList) return;
   if (!state.subscriptionPayments.length) {
     nodes.subscriptionPaymentsList.innerHTML = '<div class="item-card"><div class="item-main"><h3>Sem cobrancas da assinatura</h3></div></div>';
     return;
@@ -722,12 +724,13 @@ async function loadSubscription() {
   if (!state.subscription.pixKey) {
     state.subscription.pixKey = DEFAULT_PIX_KEY;
   }
-  setFormData(nodes.subscriptionForm, state.subscription);
+  if (nodes.subscriptionForm) setFormData(nodes.subscriptionForm, state.subscription);
   generatePixQRCode();
   showBillingAlert();
 }
 
 async function loadSubscriptionPayments() {
+  if (!nodes.subscriptionPaymentsList) return;
   if (state.me.user.role !== 'admin') return;
   state.subscriptionPayments = await api('/api/subscription/payments');
   renderSubscriptionPayments();
@@ -747,8 +750,8 @@ function registerEvents() {
 
   plateInputHandler(nodes.appointmentForm.vehiclePlate, null);
   plateInputHandler(nodes.clientPlate, nodes.clientPlateType);
-  nodes.pixKey.addEventListener('input', generatePixQRCode);
-  nodes.subscriptionForm.monthlyFee.addEventListener('input', generatePixQRCode);
+  if (nodes.pixKey) nodes.pixKey.addEventListener('input', generatePixQRCode);
+  if (nodes.subscriptionForm?.monthlyFee) nodes.subscriptionForm.monthlyFee.addEventListener('input', generatePixQRCode);
 
   document.getElementById('new-appointment-btn').addEventListener('click', () => nodes.appointmentForm.classList.remove('hidden'));
   document.getElementById('cancel-appointment-btn').addEventListener('click', () => resetAndHide(nodes.appointmentForm));
@@ -867,32 +870,36 @@ function registerEvents() {
     }
   });
 
-  nodes.subscriptionForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    try {
-      const data = Object.fromEntries(new FormData(nodes.subscriptionForm).entries());
-      data.monthlyFee = Number(data.monthlyFee || 0);
-      await api('/api/subscription', { method: 'PUT', body: JSON.stringify(data) });
-      await Promise.all([loadMe(), loadSubscription(), loadMetrics()]);
-      showMessage('Assinatura atualizada.');
-    } catch (error) {
-      showMessage(error.message, true);
-    }
-  });
+  if (nodes.subscriptionForm) {
+    nodes.subscriptionForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        const data = Object.fromEntries(new FormData(nodes.subscriptionForm).entries());
+        data.monthlyFee = Number(data.monthlyFee || 0);
+        await api('/api/subscription', { method: 'PUT', body: JSON.stringify(data) });
+        await Promise.all([loadMe(), loadSubscription(), loadMetrics()]);
+        showMessage('Assinatura atualizada.');
+      } catch (error) {
+        showMessage(error.message, true);
+      }
+    });
+  }
 
-  nodes.subscriptionPaymentForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    try {
-      const data = Object.fromEntries(new FormData(nodes.subscriptionPaymentForm).entries());
-      data.amount = Number(data.amount || 0);
-      await api('/api/subscription/payments', { method: 'POST', body: JSON.stringify(data) });
-      nodes.subscriptionPaymentForm.reset();
-      await loadSubscriptionPayments();
-      showMessage('Cobranca da assinatura criada.');
-    } catch (error) {
-      showMessage(error.message, true);
-    }
-  });
+  if (nodes.subscriptionPaymentForm) {
+    nodes.subscriptionPaymentForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        const data = Object.fromEntries(new FormData(nodes.subscriptionPaymentForm).entries());
+        data.amount = Number(data.amount || 0);
+        await api('/api/subscription/payments', { method: 'POST', body: JSON.stringify(data) });
+        nodes.subscriptionPaymentForm.reset();
+        await loadSubscriptionPayments();
+        showMessage('Cobranca da assinatura criada.');
+      } catch (error) {
+        showMessage(error.message, true);
+      }
+    });
+  }
 
   nodes.cashForm.addEventListener('submit', (event) => {
     event.preventDefault();
