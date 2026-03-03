@@ -158,7 +158,24 @@ function renderClientes() {
 }
 
 function renderVeiculos() {
-  fillSelect(nodes.veiculoCliente, state.clientes);
+  const veiculoSubmitButton = nodes.veiculoForm.querySelector('button');
+  if (!state.clientes.length) {
+    nodes.veiculoCliente.innerHTML = '<option value="">Cadastre um cliente primeiro</option>';
+    nodes.veiculoCliente.disabled = true;
+    nodes.veiculoCliente.required = false;
+    if (veiculoSubmitButton) {
+      veiculoSubmitButton.disabled = true;
+      veiculoSubmitButton.classList.add('cursor-not-allowed', 'opacity-60');
+    }
+  } else {
+    fillSelect(nodes.veiculoCliente, state.clientes);
+    nodes.veiculoCliente.disabled = false;
+    nodes.veiculoCliente.required = true;
+    if (veiculoSubmitButton) {
+      veiculoSubmitButton.disabled = false;
+      veiculoSubmitButton.classList.remove('cursor-not-allowed', 'opacity-60');
+    }
+  }
   fillSelect(nodes.agendaVeiculo, state.veiculos, 'placa');
   renderTable(nodes.veiculosList, ['Placa', 'Modelo', 'Cliente', 'Acoes'], state.veiculos.map((item) => `
     <td class="px-3 py-2">${item.placa}</td>
@@ -405,7 +422,15 @@ function bindForms() {
 
   nodes.veiculoForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (!state.clientes.length) {
+      showMessage('Cadastre um cliente antes de salvar um veiculo.', true);
+      return;
+    }
     const payload = Object.fromEntries(new FormData(nodes.veiculoForm).entries());
+    if (!payload.clienteId) {
+      showMessage('Selecione um cliente para o veiculo.', true);
+      return;
+    }
     const id = payload.id;
     delete payload.id;
     payload.clienteId = Number(payload.clienteId);
