@@ -7,19 +7,19 @@ const login = asyncHandler(async (req, res) => {
   const { email, senha } = req.body;
 
   if (!email || !senha) {
-    return res.status(400).json({ message: 'Email e senha sao obrigatorios.' });
+    return res.status(400).json({ message: 'E-mail e senha são obrigatórios.' });
   }
 
   const user = await findUserByEmail(email);
 
   if (!user) {
-    return res.status(401).json({ message: 'Credenciais invalidas.' });
+    return res.status(401).json({ message: 'Credenciais inválidas.' });
   }
 
   const validPassword = await bcrypt.compare(senha, user.senha_hash);
 
   if (!validPassword) {
-    return res.status(401).json({ message: 'Credenciais invalidas.' });
+    return res.status(401).json({ message: 'Credenciais inválidas.' });
   }
 
   const token = issueToken(user);
@@ -39,7 +39,7 @@ const me = asyncHandler(async (req, res) => {
   const user = await findUserById(req.user.id);
 
   if (!user) {
-    return res.status(404).json({ message: 'Usuario nao encontrado.' });
+    return res.status(404).json({ message: 'Usuário não encontrado.' });
   }
 
   return res.json({ user });

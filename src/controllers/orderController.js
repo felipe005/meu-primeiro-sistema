@@ -1,5 +1,15 @@
-const { asyncHandler } = require('../utils/asyncHandler');
-const { createOrder, listOrders, findOrderById, setOrderSizes, getOrderSizes } = require('../models/orderModel');
+﻿const { asyncHandler } = require('../utils/asyncHandler');
+const {
+  createOrder,
+  listOrders,
+  findOrderById,
+  setOrderSizes,
+  getOrderSizes,
+  archiveOrder,
+  unarchiveOrder,
+  softDeleteOrder,
+  hardDeleteOrder
+} = require('../models/orderModel');
 
 const COMMON_SIZES = ['34', '36', '38', '40', '42', '44', '46', '48', '50', '52', '54', '56'];
 
@@ -25,13 +35,13 @@ const create = asyncHandler(async (req, res) => {
   } = req.body;
 
   if (!cliente || !modelo || !referencia || !data || !tecido || quantidadeTotal === undefined) {
-    return res.status(400).json({ message: 'Campos obrigatorios do pedido nao informados.' });
+    return res.status(400).json({ message: 'Campos obrigatórios do pedido não informados.' });
   }
 
   const quantidade = Number(quantidadeTotal);
 
   if (!Number.isInteger(quantidade) || quantidade < 0) {
-    return res.status(400).json({ message: 'quantidade_total deve ser inteiro nao negativo.' });
+    return res.status(400).json({ message: 'quantidade_total deve ser um inteiro não negativo.' });
   }
 
   const order = await createOrder({
@@ -62,8 +72,9 @@ const create = asyncHandler(async (req, res) => {
   return res.status(201).json({ ...order, grades: sizes });
 });
 
-const list = asyncHandler(async (_req, res) => {
-  const orders = await listOrders();
+const list = asyncHandler(async (req, res) => {
+  const status = req.query.status || 'ativo';
+  const orders = await listOrders(status);
   return res.json(orders);
 });
 
@@ -72,7 +83,7 @@ const getById = asyncHandler(async (req, res) => {
   const order = await findOrderById(orderId);
 
   if (!order) {
-    return res.status(404).json({ message: 'Pedido nao encontrado.' });
+    return res.status(404).json({ message: 'Pedido não encontrado.' });
   }
 
   const sizes = await getOrderSizes(orderId);
@@ -84,7 +95,7 @@ const saveSizes = asyncHandler(async (req, res) => {
   const order = await findOrderById(orderId);
 
   if (!order) {
-    return res.status(404).json({ message: 'Pedido nao encontrado.' });
+    return res.status(404).json({ message: 'Pedido não encontrado.' });
   }
 
   const sizes = Array.isArray(req.body) ? req.body : req.body.grades;
@@ -103,4 +114,49 @@ const saveSizes = asyncHandler(async (req, res) => {
   return res.json(saved);
 });
 
-module.exports = { create, list, getById, saveSizes, COMMON_SIZES };
+const archive = asyncHandler(async (req, res) => {
+  const orderId = Number(req.params.id);
+  const updated = await archiveOrder(orderId, req.user.id);
+
+  if (!updated) {
+    return res.status(404).json({ message: 'Pedido não encontrado para arquivar.' });
+  }
+
+  return res.json({ message: 'Pedido arquivado com sucesso.', pedido: updated });
+});
+
+const unarchive = asyncHandler(async (req, res) => {
+  const orderId = Number(req.params.id);
+  const updated = await unarchiveOrder(orderId);
+
+  if (!updated) {
+    return res.status(404).json({ message: 'Pedido não encontrado para reativar.' });
+  }
+
+  return res.json({ message: 'Pedido reativado com sucesso.', pedido: updated });
+});
+
+const remove = asyncHandler(async (req, res) => {
+  const orderId = Number(req.params.id);
+  const hard = String(req.query.hard || 'false') === 'true';
+
+  if (hard) {
+    const deleted = await hardDeleteOrder(orderId);
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'Pedido não encontrado para exclusão definitiva.' });
+    }
+
+    return res.json({ message: 'Pedido excluído definitivamente.' });
+  }
+
+  const softDeleted = await softDeleteOrder(orderId, req.user.id);
+
+  if (!softDeleted) {
+    return res.status(404).json({ message: 'Pedido não encontrado para exclusão lógica.' });
+  }
+
+  return res.json({ message: 'Pedido movido para exclusão lógica.', pedido: softDeleted });
+});
+
+module.exports = { create, list, getById, saveSizes, archive, unarchive, remove, COMMON_SIZES };

@@ -8,7 +8,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const { nome, email, senha, tipo_usuario: tipoUsuario } = req.body;
 
   if (!nome || !email || !senha || !tipoUsuario) {
-    return res.status(400).json({ message: 'Todos os campos sao obrigatorios.' });
+    return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
   }
 
   if (!ALLOWED_TYPES.has(tipoUsuario)) {
@@ -18,7 +18,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const existing = await findUserByEmail(email);
 
   if (existing) {
-    return res.status(409).json({ message: 'Email ja cadastrado.' });
+    return res.status(409).json({ message: 'E-mail já cadastrado.' });
   }
 
   const senhaHash = await bcrypt.hash(senha, 10);

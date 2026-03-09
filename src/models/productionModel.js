@@ -1,4 +1,4 @@
-const { pool } = require('../config/database');
+﻿const { pool } = require('../config/database');
 
 async function createProductionRecord({
   pedidoId,
@@ -81,9 +81,25 @@ async function listProductionRecords(filters) {
     where.push(`pr.funcionario_id = $${values.length}`);
   }
 
+  if (filters.employeeId) {
+    values.push(filters.employeeId);
+    where.push(`pr.funcionario_id = $${values.length}`);
+  }
+
+  if (filters.type === 'normal') {
+    where.push('pr.is_adjustment = FALSE');
+  } else if (filters.type === 'adjustment') {
+    where.push('pr.is_adjustment = TRUE');
+  }
+
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
-  const query = `
+  values.push(filters.limit);
+  const limitParam = `$${values.length}`;
+  values.push(filters.offset);
+  const offsetParam = `$${values.length}`;
+
+  const dataQuery = `
     SELECT
       pr.id,
       pr.pedido_id,
@@ -103,11 +119,26 @@ async function listProductionRecords(filters) {
     LEFT JOIN production_evidences pe ON pe.production_record_id = pr.id
     ${whereSql}
     ORDER BY pr.data DESC
-    LIMIT 500
+    LIMIT ${limitParam}
+    OFFSET ${offsetParam}
   `;
 
-  const { rows } = await pool.query(query, values);
-  return rows;
+  const countValues = values.slice(0, values.length - 2);
+  const countQuery = `
+    SELECT COUNT(*)::int AS total
+    FROM production_records pr
+    ${whereSql}
+  `;
+
+  const [dataResult, countResult] = await Promise.all([
+    pool.query(dataQuery, values),
+    pool.query(countQuery, countValues)
+  ]);
+
+  return {
+    items: dataResult.rows,
+    total: countResult.rows[0].total
+  };
 }
 
 module.exports = { createProductionRecord, listProductionRecords };

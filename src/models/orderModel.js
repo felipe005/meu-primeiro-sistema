@@ -1,4 +1,16 @@
-const { pool } = require('../config/database');
+﻿const { pool } = require('../config/database');
+
+function resolveStatusFilter(status) {
+  if (status === 'arquivado') {
+    return { clause: "o.status = 'arquivado'" };
+  }
+
+  if (status === 'todos') {
+    return { clause: "o.status IN ('ativo', 'arquivado', 'excluido_logico')" };
+  }
+
+  return { clause: "o.status = 'ativo'" };
+}
 
 async function createOrder(orderInput) {
   const query = `
@@ -24,20 +36,27 @@ async function createOrder(orderInput) {
   return rows[0];
 }
 
-async function listOrders() {
+async function listOrders(status = 'ativo') {
+  const { clause } = resolveStatusFilter(status);
+
   const { rows } = await pool.query(`
     SELECT o.*,
       COALESCE(SUM(CASE WHEN pr.etapa = 'Loja' THEN pr.quantidade ELSE 0 END), 0)::int AS produzido_loja
     FROM orders o
     LEFT JOIN production_records pr ON pr.pedido_id = o.id
+    WHERE ${clause}
     GROUP BY o.id
     ORDER BY o.created_at DESC
   `);
+
   return rows;
 }
 
 async function findOrderById(id) {
-  const { rows } = await pool.query('SELECT * FROM orders WHERE id = $1 LIMIT 1', [id]);
+  const { rows } = await pool.query(
+    `SELECT * FROM orders WHERE id = $1 AND status <> 'excluido_logico' LIMIT 1`,
+    [id]
+  );
   return rows[0] || null;
 }
 
@@ -71,4 +90,61 @@ async function getOrderSizes(orderId) {
   return rows;
 }
 
-module.exports = { createOrder, listOrders, findOrderById, setOrderSizes, getOrderSizes };
+async function archiveOrder(orderId, userId) {
+  const { rows } = await pool.query(
+    `
+    UPDATE orders
+    SET status = 'arquivado', archived_at = NOW(), archived_by = $2
+    WHERE id = $1 AND status <> 'excluido_logico'
+    RETURNING *
+    `,
+    [orderId, userId]
+  );
+
+  return rows[0] || null;
+}
+
+async function unarchiveOrder(orderId) {
+  const { rows } = await pool.query(
+    `
+    UPDATE orders
+    SET status = 'ativo', archived_at = NULL, archived_by = NULL
+    WHERE id = $1 AND status = 'arquivado'
+    RETURNING *
+    `,
+    [orderId]
+  );
+
+  return rows[0] || null;
+}
+
+async function softDeleteOrder(orderId, userId) {
+  const { rows } = await pool.query(
+    `
+    UPDATE orders
+    SET status = 'excluido_logico', deleted_at = NOW(), deleted_by = $2
+    WHERE id = $1 AND status <> 'excluido_logico'
+    RETURNING *
+    `,
+    [orderId, userId]
+  );
+
+  return rows[0] || null;
+}
+
+async function hardDeleteOrder(orderId) {
+  const { rowCount } = await pool.query('DELETE FROM orders WHERE id = $1', [orderId]);
+  return rowCount > 0;
+}
+
+module.exports = {
+  createOrder,
+  listOrders,
+  findOrderById,
+  setOrderSizes,
+  getOrderSizes,
+  archiveOrder,
+  unarchiveOrder,
+  softDeleteOrder,
+  hardDeleteOrder
+};

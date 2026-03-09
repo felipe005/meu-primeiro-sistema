@@ -46,6 +46,11 @@ async function initializeDatabase() {
       matriz NUMERIC(10,2),
       retalho NUMERIC(10,2),
       quantidade_total INTEGER NOT NULL CHECK (quantidade_total >= 0),
+      status VARCHAR(20) NOT NULL DEFAULT 'ativo',
+      archived_at TIMESTAMP,
+      archived_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      deleted_at TIMESTAMP,
+      deleted_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
 
@@ -82,10 +87,27 @@ async function initializeDatabase() {
     ALTER TABLE production_records ADD COLUMN IF NOT EXISTS user_agent VARCHAR(300);
     ALTER TABLE production_records ADD COLUMN IF NOT EXISTS is_adjustment BOOLEAN NOT NULL DEFAULT FALSE;
     ALTER TABLE production_records ADD COLUMN IF NOT EXISTS adjustment_reason TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'ativo';
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS archived_by INTEGER REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS deleted_by INTEGER REFERENCES users(id) ON DELETE SET NULL;
+    UPDATE orders SET status = 'ativo' WHERE status IS NULL;
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      tipo VARCHAR(30) NOT NULL,
+      mensagem TEXT NOT NULL,
+      is_read BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
 
     CREATE INDEX IF NOT EXISTS idx_production_records_order_stage_date ON production_records(pedido_id, etapa, data);
     CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(data);
+    CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
     CREATE INDEX IF NOT EXISTS idx_production_records_employee_date ON production_records(funcionario_id, data);
+    CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read, created_at DESC);
   `);
 
   const stepsSql = PRODUCTION_STEPS.map((step) => `'${step}'`).join(', ');

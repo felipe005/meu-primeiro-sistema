@@ -1,4 +1,4 @@
-const { asyncHandler } = require('../utils/asyncHandler');
+﻿const { asyncHandler } = require('../utils/asyncHandler');
 const { createProductionRecord, listProductionRecords } = require('../models/productionModel');
 const { findOrderById } = require('../models/orderModel');
 const { PRODUCTION_STEPS } = require('../constants/production');
@@ -10,6 +10,12 @@ function parseDateInput(value) {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed.toISOString();
+}
+
+function parsePositiveInt(value, fallback) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) return fallback;
+  return parsed;
 }
 
 function getClientIp(req) {
@@ -25,21 +31,21 @@ const create = asyncHandler(async (req, res) => {
 
   const order = await findOrderById(Number(pedidoId));
   if (!order) {
-    return res.status(404).json({ message: 'Pedido nao encontrado.' });
+    return res.status(404).json({ message: 'Pedido não encontrado.' });
   }
 
   if (!STEPS.has(etapa)) {
-    return res.status(400).json({ message: 'Etapa invalida.' });
+    return res.status(400).json({ message: 'Etapa inválida.' });
   }
 
   const qtd = Number(quantidade);
 
   if (!Number.isInteger(qtd) || qtd <= 0) {
-    return res.status(400).json({ message: 'Quantidade deve ser inteiro positivo.' });
+    return res.status(400).json({ message: 'Quantidade deve ser um inteiro positivo.' });
   }
 
   if (!req.file) {
-    return res.status(400).json({ message: 'Foto obrigatoria para registrar producao.' });
+    return res.status(400).json({ message: 'Foto obrigatória para registrar produção.' });
   }
 
   const isAdjustment = isAdjustmentRaw === true || isAdjustmentRaw === 'true';
@@ -76,17 +82,33 @@ const list = asyncHandler(async (req, res) => {
   const etapa = req.query.etapa ? String(req.query.etapa) : null;
   const from = parseDateInput(req.query.from);
   const to = parseDateInput(req.query.to);
+  const employeeId = req.query.employeeId ? Number(req.query.employeeId) : null;
+  const type = req.query.type || 'all';
+  const page = parsePositiveInt(req.query.page, 1);
+  const limit = parsePositiveInt(req.query.limit, 50);
+  const offset = (page - 1) * limit;
 
   const filters = {
     orderId: Number.isInteger(orderId) ? orderId : null,
     etapa: etapa && STEPS.has(etapa) ? etapa : null,
     from,
     to,
-    onlyEmployeeId: req.user.tipo_usuario === 'funcionario' ? req.user.id : null
+    employeeId: req.user.tipo_usuario === 'admin' && Number.isInteger(employeeId) ? employeeId : null,
+    onlyEmployeeId: req.user.tipo_usuario === 'funcionario' ? req.user.id : null,
+    type: ['normal', 'adjustment', 'all'].includes(type) ? type : 'all',
+    limit,
+    offset
   };
 
-  const data = await listProductionRecords(filters);
-  return res.json(data);
+  const result = await listProductionRecords(filters);
+
+  return res.json({
+    items: result.items,
+    total: result.total,
+    page,
+    limit,
+    total_pages: Math.max(1, Math.ceil(result.total / limit))
+  });
 });
 
 module.exports = { create, list, STEPS, PRODUCTION_STEPS };
