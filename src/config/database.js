@@ -91,6 +91,22 @@ async function initializeDatabase() {
   const stepsSql = PRODUCTION_STEPS.map((step) => `'${step}'`).join(', ');
 
   await pool.query(`
+    DO $$
+    DECLARE cname text;
+    BEGIN
+      SELECT conname INTO cname
+      FROM pg_constraint
+      WHERE conrelid = 'production_records'::regclass
+        AND contype = 'c'
+        AND pg_get_constraintdef(oid) ILIKE '%etapa%';
+
+      IF cname IS NOT NULL THEN
+        EXECUTE format('ALTER TABLE production_records DROP CONSTRAINT %I', cname);
+      END IF;
+    END $$;
+  `);
+
+  await pool.query(`
     UPDATE production_records
     SET etapa = CASE
       WHEN etapa = 'Costura' THEN 'Confeccao'
@@ -108,18 +124,7 @@ async function initializeDatabase() {
 
   await pool.query(`
     DO $$
-    DECLARE cname text;
     BEGIN
-      SELECT conname INTO cname
-      FROM pg_constraint
-      WHERE conrelid = 'production_records'::regclass
-        AND contype = 'c'
-        AND pg_get_constraintdef(oid) ILIKE '%etapa%';
-
-      IF cname IS NOT NULL THEN
-        EXECUTE format('ALTER TABLE production_records DROP CONSTRAINT %I', cname);
-      END IF;
-
       ALTER TABLE production_records
       ADD CONSTRAINT production_records_etapa_check
       CHECK (etapa IN (${stepsSql}));
