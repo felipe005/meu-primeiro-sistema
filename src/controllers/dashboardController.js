@@ -1,9 +1,14 @@
 const { asyncHandler } = require('../utils/asyncHandler');
-const { getDashboardStats } = require('../models/dashboardModel');
+const { getDashboardStats, getOperationalAlerts } = require('../models/dashboardModel');
 
 const getStats = asyncHandler(async (_req, res) => {
   const stats = await getDashboardStats();
   return res.json(stats);
 });
 
-module.exports = { getStats };
+const getAlerts = asyncHandler(async (_req, res) => {
+  const alerts = await getOperationalAlerts();
+  return res.json(alerts);
+});
+
+module.exports = { getStats, getAlerts };

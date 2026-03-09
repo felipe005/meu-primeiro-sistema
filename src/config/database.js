@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
+const { PRODUCTION_STEPS } = require('../constants/production');
 
 const isProdLikeDatabaseUrl =
   process.env.DATABASE_URL &&
@@ -59,11 +60,57 @@ async function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS production_records (
       id SERIAL PRIMARY KEY,
       pedido_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-      etapa VARCHAR(30) NOT NULL CHECK (etapa IN ('Costura', 'Travete', 'Lavanderia', 'Acabamento', 'Estoque')),
+      etapa VARCHAR(30) NOT NULL,
       quantidade INTEGER NOT NULL CHECK (quantidade > 0),
       funcionario_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-      data TIMESTAMP NOT NULL DEFAULT NOW()
+      data TIMESTAMP NOT NULL DEFAULT NOW(),
+      ip_address VARCHAR(120),
+      user_agent VARCHAR(300),
+      is_adjustment BOOLEAN NOT NULL DEFAULT FALSE,
+      adjustment_reason TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS production_evidences (
+      id SERIAL PRIMARY KEY,
+      production_record_id INTEGER UNIQUE NOT NULL REFERENCES production_records(id) ON DELETE CASCADE,
+      file_url TEXT NOT NULL,
+      mime_type VARCHAR(80) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    ALTER TABLE production_records ADD COLUMN IF NOT EXISTS ip_address VARCHAR(120);
+    ALTER TABLE production_records ADD COLUMN IF NOT EXISTS user_agent VARCHAR(300);
+    ALTER TABLE production_records ADD COLUMN IF NOT EXISTS is_adjustment BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE production_records ADD COLUMN IF NOT EXISTS adjustment_reason TEXT;
+
+    CREATE INDEX IF NOT EXISTS idx_production_records_order_stage_date ON production_records(pedido_id, etapa, data);
+    CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(data);
+    CREATE INDEX IF NOT EXISTS idx_production_records_employee_date ON production_records(funcionario_id, data);
+  `);
+
+  const stepsSql = PRODUCTION_STEPS.map((step) => `'${step}'`).join(', ');
+
+  await pool.query(`
+    DO $$
+    DECLARE cname text;
+    BEGIN
+      SELECT conname INTO cname
+      FROM pg_constraint
+      WHERE conrelid = 'production_records'::regclass
+        AND contype = 'c'
+        AND pg_get_constraintdef(oid) ILIKE '%etapa%';
+
+      IF cname IS NOT NULL THEN
+        EXECUTE format('ALTER TABLE production_records DROP CONSTRAINT %I', cname);
+      END IF;
+
+      ALTER TABLE production_records
+      ADD CONSTRAINT production_records_etapa_check
+      CHECK (etapa IN (${stepsSql}));
+    EXCEPTION
+      WHEN duplicate_object THEN
+        NULL;
+    END $$;
   `);
 
   const adminEmail = process.env.ADMIN_EMAIL;

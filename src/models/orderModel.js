@@ -27,7 +27,7 @@ async function createOrder(orderInput) {
 async function listOrders() {
   const { rows } = await pool.query(`
     SELECT o.*,
-      COALESCE(SUM(CASE WHEN pr.etapa = 'Estoque' THEN pr.quantidade ELSE 0 END), 0)::int AS produzido_estoque
+      COALESCE(SUM(CASE WHEN pr.etapa = 'Loja' THEN pr.quantidade ELSE 0 END), 0)::int AS produzido_loja
     FROM orders o
     LEFT JOIN production_records pr ON pr.pedido_id = o.id
     GROUP BY o.id

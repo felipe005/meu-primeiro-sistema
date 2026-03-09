@@ -3,17 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FabricaFlow | Producao</title>
+    <title>FabricaFlow v3</title>
+    <script>
+      (function () {
+        const stored = localStorage.getItem('theme_mode');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const mode = stored || (prefersDark ? 'dark' : 'light');
+        if (mode === 'dark') document.documentElement.classList.add('dark');
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             colors: {
-              brand: {
-                100: '#e0f2fe',
-                600: '#0284c7',
-                900: '#082f49'
+              slatebrand: {
+                50: '#eef4ff',
+                100: '#dde9ff',
+                500: '#2563eb',
+                700: '#1d4ed8',
+                900: '#0f172a'
               }
             }
           }
@@ -21,148 +32,159 @@
       };
     </script>
   </head>
-  <body class="bg-slate-100 text-slate-900">
-    <div class="min-h-screen md:flex">
-      <aside class="bg-brand-900 p-6 text-white md:w-72">
-        <p class="text-xs uppercase tracking-[0.2em] text-brand-100">FabricaFlow</p>
-        <h1 class="mt-3 text-xl font-semibold">Controle de Producao</h1>
-        <p id="userInfo" class="mt-1 text-sm text-brand-100"></p>
+  <body class="bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <div class="min-h-screen pb-20 md:pb-0 md:flex">
+      <aside class="hidden md:block md:w-72 md:shrink-0 md:border-r md:border-slate-200 md:bg-white md:p-6 dark:md:border-slate-700 dark:md:bg-slate-950">
+        <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">FabricaFlow v3</p>
+        <h1 class="mt-3 text-2xl font-semibold">Painel de Producao</h1>
+        <p id="userInfoDesktop" class="mt-2 text-sm text-slate-500 dark:text-slate-400"></p>
 
         <nav class="mt-8 space-y-2">
-          <button data-view="dashboard" class="nav-btn w-full rounded-lg px-3 py-2 text-left hover:bg-white/10">Dashboard</button>
-          <button data-view="orders" class="nav-btn w-full rounded-lg px-3 py-2 text-left hover:bg-white/10">Pedidos</button>
-          <button data-view="production" class="nav-btn w-full rounded-lg px-3 py-2 text-left hover:bg-white/10">Producao</button>
-          <button data-view="users" id="usersNav" class="nav-btn w-full rounded-lg px-3 py-2 text-left hover:bg-white/10">Usuarios</button>
+          <button data-view="register" class="nav-btn w-full rounded-xl px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800">Registrar</button>
+          <button data-view="dashboard" class="nav-btn w-full rounded-xl px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800">Dashboard</button>
+          <button data-view="orders" class="nav-btn w-full rounded-xl px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800">Pedidos</button>
+          <button data-view="history" class="nav-btn w-full rounded-xl px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800">Historico</button>
+          <button data-view="users" id="usersNavDesktop" class="nav-btn w-full rounded-xl px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800">Usuarios</button>
         </nav>
 
-        <button id="logoutBtn" class="mt-10 w-full rounded-lg border border-white/40 px-3 py-2 text-sm hover:bg-white/10">Sair</button>
+        <div class="mt-10 space-y-2">
+          <button id="themeToggleDesktop" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600">Trocar tema</button>
+          <button id="logoutBtnDesktop" class="w-full rounded-xl bg-slate-900 px-3 py-2 text-sm text-white dark:bg-slate-200 dark:text-slate-900">Sair</button>
+        </div>
       </aside>
 
       <main class="flex-1 p-4 md:p-8">
-        <section id="dashboardView" class="view space-y-4">
-          <h2 class="text-2xl font-semibold">Dashboard</h2>
-          <div class="grid gap-4 sm:grid-cols-3">
-            <article class="rounded-xl bg-white p-4 shadow-sm">
-              <p class="text-sm text-slate-500">Pedidos em producao</p>
-              <p id="statOrdersInProd" class="mt-2 text-3xl font-bold">0</p>
-            </article>
-            <article class="rounded-xl bg-white p-4 shadow-sm">
-              <p class="text-sm text-slate-500">Producao do dia</p>
-              <p id="statToday" class="mt-2 text-3xl font-bold">0</p>
-            </article>
-            <article class="rounded-xl bg-white p-4 shadow-sm">
-              <p class="text-sm text-slate-500">Total produzido</p>
-              <p id="statTotal" class="mt-2 text-3xl font-bold">0</p>
-            </article>
+        <header class="mb-4 flex items-center justify-between md:hidden">
+          <div>
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">FabricaFlow v3</p>
+            <p id="userInfoMobile" class="text-sm text-slate-500 dark:text-slate-400"></p>
+          </div>
+          <button id="themeToggleMobile" class="rounded-lg border border-slate-300 px-3 py-2 text-xs dark:border-slate-600">Tema</button>
+        </header>
+
+        <section id="registerView" class="view space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-semibold md:text-2xl">Registro rapido</h2>
+            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Mobile first</span>
+          </div>
+
+          <form id="productionForm" class="space-y-3 rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
+            <div class="grid gap-3 md:grid-cols-2">
+              <select id="pedido_id" required class="rounded-xl border border-slate-300 bg-transparent p-3 dark:border-slate-700"></select>
+              <select id="etapa" required class="rounded-xl border border-slate-300 bg-transparent p-3 dark:border-slate-700">
+                <option value="Corte">Corte</option>
+                <option value="Confeccao">Confeccao</option>
+                <option value="Travete">Travete</option>
+                <option value="Lavanderia">Lavanderia</option>
+                <option value="Acabamento">Acabamento</option>
+                <option value="Loja">Loja</option>
+              </select>
+              <input id="quantidade" type="number" min="1" required placeholder="Quantidade" class="rounded-xl border border-slate-300 bg-transparent p-3 dark:border-slate-700" />
+              <input id="foto" type="file" accept="image/*" capture="environment" required class="rounded-xl border border-slate-300 bg-transparent p-3 dark:border-slate-700" />
+            </div>
+            <button class="w-full rounded-xl bg-slatebrand-700 px-4 py-3 text-white hover:bg-slatebrand-500">Registrar producao</button>
+          </form>
+
+          <section class="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Alertas operacionais</h3>
+            <ul id="operationalAlerts" class="mt-3 space-y-2 text-sm"></ul>
+          </section>
+        </section>
+
+        <section id="dashboardView" class="view hidden space-y-4">
+          <h2 class="text-xl font-semibold md:text-2xl">Dashboard de prazo</h2>
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <article class="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950"><p class="text-xs text-slate-500">Pedidos em producao</p><p id="statOrdersInProd" class="mt-2 text-2xl font-bold">0</p></article>
+            <article class="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950"><p class="text-xs text-slate-500">Pedidos em atraso</p><p id="statLate" class="mt-2 text-2xl font-bold">0</p></article>
+            <article class="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950"><p class="text-xs text-slate-500">Pedidos em risco</p><p id="statRisk" class="mt-2 text-2xl font-bold">0</p></article>
+            <article class="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950"><p class="text-xs text-slate-500">Lead time medio (dias)</p><p id="statLeadTime" class="mt-2 text-2xl font-bold">0</p></article>
+          </div>
+
+          <div class="grid gap-4 lg:grid-cols-2">
+            <section class="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
+              <h3 class="font-medium">Throughput do dia</h3>
+              <ul id="throughputList" class="mt-3 space-y-2 text-sm"></ul>
+            </section>
+            <section class="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
+              <h3 class="font-medium">Alertas de divergencia e atraso</h3>
+              <ul id="dashboardAlerts" class="mt-3 space-y-2 text-sm"></ul>
+            </section>
           </div>
         </section>
 
         <section id="ordersView" class="view hidden space-y-4">
-          <div class="flex items-center justify-between">
-            <h2 class="text-2xl font-semibold">Pedidos de Producao</h2>
-          </div>
+          <h2 class="text-xl font-semibold md:text-2xl">Pedidos</h2>
 
-          <form id="orderForm" class="space-y-4 rounded-xl bg-white p-4 shadow-sm">
+          <form id="orderForm" class="space-y-4 rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
             <h3 class="font-medium">Novo pedido</h3>
             <div class="grid gap-3 md:grid-cols-3">
-              <input name="cliente" placeholder="Cliente" required class="rounded-lg border p-2" />
-              <input name="modelo" placeholder="Modelo" required class="rounded-lg border p-2" />
-              <input name="referencia" placeholder="Referencia" required class="rounded-lg border p-2" />
-              <input name="data" type="date" required class="rounded-lg border p-2" />
-              <input name="tecido" placeholder="Tecido" required class="rounded-lg border p-2" />
-              <input name="quantidade_total" type="number" min="0" placeholder="Quantidade total" required class="rounded-lg border p-2" />
-              <input name="largura" type="number" step="0.01" placeholder="Largura" class="rounded-lg border p-2" />
-              <input name="media" type="number" step="0.01" placeholder="Media" class="rounded-lg border p-2" />
-              <input name="matriz" type="number" step="0.01" placeholder="Matriz" class="rounded-lg border p-2" />
-              <input name="retalho" type="number" step="0.01" placeholder="Retalho" class="rounded-lg border p-2" />
+              <input name="cliente" placeholder="Cliente" required class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+              <input name="modelo" placeholder="Modelo" required class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+              <input name="referencia" placeholder="Referencia" required class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+              <input name="data" type="date" required class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+              <input name="tecido" placeholder="Tecido" required class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+              <input name="quantidade_total" type="number" min="0" placeholder="Quantidade total" required class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+              <input name="largura" type="number" step="0.01" placeholder="Largura" class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+              <input name="media" type="number" step="0.01" placeholder="Media" class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+              <input name="matriz" type="number" step="0.01" placeholder="Matriz" class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+              <input name="retalho" type="number" step="0.01" placeholder="Retalho" class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
             </div>
-
             <div>
-              <p class="mb-2 text-sm font-medium text-slate-600">Grade de tamanhos</p>
-              <div id="sizesGrid" class="grid gap-2 grid-cols-3 md:grid-cols-6"></div>
+              <p class="mb-2 text-sm font-medium text-slate-500">Grade de tamanhos</p>
+              <div id="sizesGrid" class="grid grid-cols-3 gap-2 md:grid-cols-6"></div>
             </div>
-
-            <button class="rounded-lg bg-brand-600 px-4 py-2 text-white">Salvar pedido</button>
+            <button class="rounded-xl bg-slatebrand-700 px-4 py-2 text-white">Salvar pedido</button>
           </form>
 
-          <div class="overflow-x-auto rounded-xl bg-white shadow-sm">
+          <div class="overflow-x-auto rounded-2xl bg-white shadow-sm dark:bg-slate-950">
             <table class="min-w-full text-sm">
-              <thead class="bg-slate-50 text-left text-slate-600">
-                <tr>
-                  <th class="p-3">Cliente</th>
-                  <th class="p-3">Modelo</th>
-                  <th class="p-3">Referencia</th>
-                  <th class="p-3">Data</th>
-                  <th class="p-3">Qtd Total</th>
-                  <th class="p-3">Em Estoque</th>
-                </tr>
-              </thead>
+              <thead class="text-left text-slate-500"><tr><th class="p-3">Cliente</th><th class="p-3">Modelo</th><th class="p-3">Referencia</th><th class="p-3">Prazo</th><th class="p-3">Qtd</th><th class="p-3">Na Loja</th></tr></thead>
               <tbody id="ordersTable"></tbody>
             </table>
           </div>
         </section>
 
-        <section id="productionView" class="view hidden space-y-4">
-          <h2 class="text-2xl font-semibold">Registro de Producao</h2>
-          <form id="productionForm" class="grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-4">
-            <select id="pedido_id" required class="rounded-lg border p-2"></select>
-            <select id="etapa" required class="rounded-lg border p-2">
-              <option value="Costura">Costura</option>
-              <option value="Travete">Travete</option>
-              <option value="Lavanderia">Lavanderia</option>
-              <option value="Acabamento">Acabamento</option>
-              <option value="Estoque">Estoque</option>
-            </select>
-            <input id="quantidade" type="number" min="1" required placeholder="Quantidade" class="rounded-lg border p-2" />
-            <button class="rounded-lg bg-brand-600 px-4 py-2 text-white">Registrar</button>
-          </form>
-
-          <div class="overflow-x-auto rounded-xl bg-white shadow-sm">
+        <section id="historyView" class="view hidden space-y-4">
+          <h2 class="text-xl font-semibold md:text-2xl">Historico de producao</h2>
+          <div class="overflow-x-auto rounded-2xl bg-white shadow-sm dark:bg-slate-950">
             <table class="min-w-full text-sm">
-              <thead class="bg-slate-50 text-left text-slate-600">
-                <tr>
-                  <th class="p-3">Data</th>
-                  <th class="p-3">Pedido</th>
-                  <th class="p-3">Etapa</th>
-                  <th class="p-3">Quantidade</th>
-                  <th class="p-3">Funcionario</th>
-                </tr>
-              </thead>
+              <thead class="text-left text-slate-500"><tr><th class="p-3">Data</th><th class="p-3">Pedido</th><th class="p-3">Etapa</th><th class="p-3">Qtd</th><th class="p-3">Funcionario</th><th class="p-3">Evidencia</th><th class="p-3">Tipo</th></tr></thead>
               <tbody id="productionTable"></tbody>
             </table>
           </div>
         </section>
 
         <section id="usersView" class="view hidden space-y-4">
-          <h2 class="text-2xl font-semibold">Cadastro de Usuarios</h2>
-          <form id="userForm" class="grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-4">
-            <input name="nome" required placeholder="Nome" class="rounded-lg border p-2" />
-            <input name="email" type="email" required placeholder="Email" class="rounded-lg border p-2" />
-            <input name="senha" type="password" required placeholder="Senha" class="rounded-lg border p-2" />
-            <select name="tipo_usuario" class="rounded-lg border p-2">
+          <h2 class="text-xl font-semibold md:text-2xl">Usuarios</h2>
+          <form id="userForm" class="grid gap-3 rounded-2xl bg-white p-4 shadow-sm md:grid-cols-4 dark:bg-slate-950">
+            <input name="nome" required placeholder="Nome" class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+            <input name="email" type="email" required placeholder="Email" class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+            <input name="senha" type="password" required placeholder="Senha" class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700" />
+            <select name="tipo_usuario" class="rounded-xl border border-slate-300 bg-transparent p-2 dark:border-slate-700">
               <option value="funcionario">Funcionario</option>
               <option value="admin">Admin</option>
             </select>
-            <button class="rounded-lg bg-brand-600 px-4 py-2 text-white md:col-span-4">Cadastrar</button>
+            <button class="rounded-xl bg-slatebrand-700 px-4 py-2 text-white md:col-span-4">Cadastrar</button>
           </form>
-
-          <div class="overflow-x-auto rounded-xl bg-white shadow-sm">
+          <div class="overflow-x-auto rounded-2xl bg-white shadow-sm dark:bg-slate-950">
             <table class="min-w-full text-sm">
-              <thead class="bg-slate-50 text-left text-slate-600">
-                <tr>
-                  <th class="p-3">Nome</th>
-                  <th class="p-3">Email</th>
-                  <th class="p-3">Tipo</th>
-                </tr>
-              </thead>
+              <thead class="text-left text-slate-500"><tr><th class="p-3">Nome</th><th class="p-3">Email</th><th class="p-3">Tipo</th></tr></thead>
               <tbody id="usersTable"></tbody>
             </table>
           </div>
         </section>
 
-        <p id="appMessage" class="hidden rounded-lg bg-slate-800 p-3 text-sm text-white"></p>
+        <p id="appMessage" class="hidden rounded-xl bg-slate-800 p-3 text-sm text-white"></p>
       </main>
     </div>
+
+    <nav class="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-slate-200 bg-white p-2 text-xs md:hidden dark:border-slate-700 dark:bg-slate-950">
+      <button data-view="register" class="nav-btn rounded-lg px-2 py-2">Registrar</button>
+      <button data-view="dashboard" class="nav-btn rounded-lg px-2 py-2">Dashboard</button>
+      <button data-view="orders" class="nav-btn rounded-lg px-2 py-2">Pedidos</button>
+      <button data-view="history" class="nav-btn rounded-lg px-2 py-2">Historico</button>
+      <button id="logoutBtnMobile" class="rounded-lg border border-slate-300 px-2 py-2 dark:border-slate-600">Sair</button>
+    </nav>
 
     <script src="/js/app.js"></script>
   </body>
