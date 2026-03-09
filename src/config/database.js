@@ -91,6 +91,22 @@ async function initializeDatabase() {
   const stepsSql = PRODUCTION_STEPS.map((step) => `'${step}'`).join(', ');
 
   await pool.query(`
+    UPDATE production_records
+    SET etapa = CASE
+      WHEN etapa = 'Costura' THEN 'Confeccao'
+      WHEN etapa = 'Estoque' THEN 'Loja'
+      ELSE etapa
+    END
+    WHERE etapa IN ('Costura', 'Estoque');
+  `);
+
+  await pool.query(`
+    UPDATE production_records
+    SET etapa = 'Confeccao'
+    WHERE etapa NOT IN (${stepsSql});
+  `);
+
+  await pool.query(`
     DO $$
     DECLARE cname text;
     BEGIN
