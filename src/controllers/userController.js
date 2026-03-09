@@ -1,116 +1,35 @@
-const userModel = require('../models/userModel');
-const { hashPassword } = require('../utils/password');
+const bcrypt = require('bcrypt');
+const { asyncHandler } = require('../utils/asyncHandler');
+const { createUser, listUsers, findUserByEmail } = require('../models/userModel');
 
-async function listUsers(req, res, next) {
-  try {
-    const users = await userModel.listByCompany(req.auth.companyId);
-    res.json(users);
-  } catch (error) {
-    next(error);
+const ALLOWED_TYPES = new Set(['admin', 'funcionario']);
+
+const registerUser = asyncHandler(async (req, res) => {
+  const { nome, email, senha, tipo_usuario: tipoUsuario } = req.body;
+
+  if (!nome || !email || !senha || !tipoUsuario) {
+    return res.status(400).json({ message: 'Todos os campos sao obrigatorios.' });
   }
-}
 
-async function createUser(req, res, next) {
-  try {
-    const { name, email, password, role = 'member', active = 1 } = req.body;
-
-    if (!name || !email || !password) {
-      res.status(400).json({ message: 'Preencha name, email e password.' });
-      return;
-    }
-
-    if (!['admin', 'member'].includes(role)) {
-      res.status(400).json({ message: 'role invalido.' });
-      return;
-    }
-
-    const existing = await userModel.findByEmail(email.toLowerCase());
-    if (existing) {
-      res.status(409).json({ message: 'Email ja cadastrado.' });
-      return;
-    }
-
-    const passwordHash = hashPassword(password);
-    const created = await userModel.create({
-      companyId: req.auth.companyId,
-      name,
-      email: email.toLowerCase(),
-      passwordHash,
-      role,
-      active: active ? 1 : 0,
-    });
-
-    res.status(201).json({ id: created.id, message: 'Usuario criado.' });
-  } catch (error) {
-    next(error);
+  if (!ALLOWED_TYPES.has(tipoUsuario)) {
+    return res.status(400).json({ message: 'tipo_usuario deve ser admin ou funcionario.' });
   }
-}
 
-async function updateUser(req, res, next) {
-  try {
-    const userId = Number(req.params.id);
-    const { name, email, role = 'member', active = 1, password } = req.body;
+  const existing = await findUserByEmail(email);
 
-    if (!name || !email) {
-      res.status(400).json({ message: 'Preencha name e email.' });
-      return;
-    }
-
-    if (!['admin', 'member'].includes(role)) {
-      res.status(400).json({ message: 'role invalido.' });
-      return;
-    }
-
-    const existing = await userModel.findByEmail(email.toLowerCase());
-    if (existing && existing.id !== userId) {
-      res.status(409).json({ message: 'Email ja cadastrado.' });
-      return;
-    }
-
-    const passwordHash = password ? hashPassword(password) : undefined;
-    const result = await userModel.updateById(req.auth.companyId, userId, {
-      name,
-      email: email.toLowerCase(),
-      role,
-      active: active ? 1 : 0,
-      passwordHash,
-    });
-
-    if (!result.changes) {
-      res.status(404).json({ message: 'Usuario nao encontrado.' });
-      return;
-    }
-
-    res.json({ message: 'Usuario atualizado.' });
-  } catch (error) {
-    next(error);
+  if (existing) {
+    return res.status(409).json({ message: 'Email ja cadastrado.' });
   }
-}
 
-async function deleteUser(req, res, next) {
-  try {
-    const userId = Number(req.params.id);
+  const senhaHash = await bcrypt.hash(senha, 10);
+  const user = await createUser({ nome, email, senhaHash, tipoUsuario });
 
-    if (userId === req.auth.userId) {
-      res.status(400).json({ message: 'Nao e permitido excluir o proprio usuario.' });
-      return;
-    }
+  return res.status(201).json(user);
+});
 
-    const result = await userModel.deleteById(req.auth.companyId, userId);
-    if (!result.changes) {
-      res.status(404).json({ message: 'Usuario nao encontrado.' });
-      return;
-    }
+const getUsers = asyncHandler(async (_req, res) => {
+  const users = await listUsers();
+  return res.json(users);
+});
 
-    res.json({ message: 'Usuario removido.' });
-  } catch (error) {
-    next(error);
-  }
-}
-
-module.exports = {
-  listUsers,
-  createUser,
-  updateUser,
-  deleteUser,
-};
+module.exports = { registerUser, getUsers };

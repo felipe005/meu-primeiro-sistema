@@ -1,23 +1,18 @@
 {
-  "name": "meu-primeiro-sistema",
-  "version": "1.0.0",
-  "description": "SaaS multi-tenant com Node.js, Express, SQLite e frontend HTML/CSS/JS",
+  "name": "fabrica-producao",
+  "version": "2.0.0",
+  "description": "Sistema web de controle de producao para fabrica de roupas",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js"
   },
-  "keywords": [
-    "saas",
-    "multi-tenant",
-    "express",
-    "sqlite"
-  ],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.6.1",
     "express": "^5.2.1",
-    "sqlite3": "^5.1.7"
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3"
   }
 }

@@ -1,226 +1,88 @@
-const sqlite3 = require('sqlite3').verbose();
-const { dbPath } = require('./env');
+const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
 
-const db = new sqlite3.Database(dbPath);
+const isProdLikeDatabaseUrl =
+  process.env.DATABASE_URL &&
+  !process.env.DATABASE_URL.includes('localhost') &&
+  !process.env.DATABASE_URL.includes('127.0.0.1');
 
-const schemaStatements = [
-  'PRAGMA foreign_keys = ON;',
-  `CREATE TABLE IF NOT EXISTS companies (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    business_type TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );`,
-  `CREATE TABLE IF NOT EXISTS subscriptions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    company_id INTEGER NOT NULL UNIQUE,
-    plan_status TEXT NOT NULL DEFAULT 'active' CHECK(plan_status IN ('active', 'inactive')),
-    monthly_fee REAL NOT NULL DEFAULT 49.99,
-    pix_key TEXT,
-    preferred_payment_method TEXT NOT NULL DEFAULT 'pix' CHECK(preferred_payment_method IN ('pix', 'cartao_credito', 'cartao_debito', 'boleto', 'transferencia')),
-    next_billing_date TEXT,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
-  );`,
-  `CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    company_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'member' CHECK(role IN ('admin', 'member')),
-    platform_owner INTEGER NOT NULL DEFAULT 0 CHECK(platform_owner IN (0, 1)),
-    active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0, 1)),
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
-  );`,
-  `CREATE TABLE IF NOT EXISTS sessions (
-    token TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    expires_at TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-  );`,
-  `CREATE TABLE IF NOT EXISTS clients (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    company_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    email TEXT,
-    phone TEXT,
-    vehicle_plate TEXT,
-    vehicle_model TEXT,
-    plate_type TEXT NOT NULL DEFAULT 'nao_informado' CHECK(plate_type IN ('mercosul', 'antiga', 'nao_informado')),
-    monthly_fee REAL NOT NULL DEFAULT 0,
-    next_due_date TEXT,
-    last_payment_date TEXT,
-    payment_status TEXT NOT NULL DEFAULT 'pendente' CHECK(payment_status IN ('em_dia', 'pendente', 'atrasado')),
-    status TEXT NOT NULL DEFAULT 'lead' CHECK(status IN ('lead', 'active', 'inactive')),
-    notes TEXT,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
-  );`,
-  `CREATE TABLE IF NOT EXISTS wash_services (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    company_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    price REAL NOT NULL,
-    duration_minutes INTEGER NOT NULL,
-    active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0, 1)),
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
-  );`,
-  `CREATE TABLE IF NOT EXISTS team_members (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    company_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    role TEXT NOT NULL,
-    salary REAL NOT NULL DEFAULT 0,
-    shift_label TEXT,
-    active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0, 1)),
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
-  );`,
-  `CREATE TABLE IF NOT EXISTS appointments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    company_id INTEGER NOT NULL,
-    client_name TEXT NOT NULL,
-    vehicle_plate TEXT,
-    vehicle_model TEXT,
-    phone TEXT,
-    service_id INTEGER,
-    team_member_id INTEGER,
-    appointment_date TEXT NOT NULL,
-    appointment_time TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'aguardando' CHECK(status IN ('aguardando', 'em_lavagem', 'pronto', 'entregue')),
-    price REAL NOT NULL DEFAULT 0,
-    notes TEXT,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
-    FOREIGN KEY(service_id) REFERENCES wash_services(id) ON DELETE SET NULL,
-    FOREIGN KEY(team_member_id) REFERENCES team_members(id) ON DELETE SET NULL
-  );`,
-  'CREATE INDEX IF NOT EXISTS idx_users_company_id ON users(company_id);',
-  'CREATE INDEX IF NOT EXISTS idx_clients_company_id ON clients(company_id);',
-  'CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);',
-  'CREATE INDEX IF NOT EXISTS idx_wash_services_company_id ON wash_services(company_id);',
-  'CREATE INDEX IF NOT EXISTS idx_team_members_company_id ON team_members(company_id);',
-  'CREATE INDEX IF NOT EXISTS idx_appointments_company_id ON appointments(company_id);',
-  `CREATE TRIGGER IF NOT EXISTS trg_clients_updated_at
-    AFTER UPDATE ON clients
-    FOR EACH ROW
-    BEGIN
-      UPDATE clients SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-    END;`,
-  `CREATE TRIGGER IF NOT EXISTS trg_services_updated_at
-    AFTER UPDATE ON wash_services
-    FOR EACH ROW
-    BEGIN
-      UPDATE wash_services SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-    END;`,
-  `CREATE TRIGGER IF NOT EXISTS trg_team_updated_at
-    AFTER UPDATE ON team_members
-    FOR EACH ROW
-    BEGIN
-      UPDATE team_members SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-    END;`,
-  `CREATE TRIGGER IF NOT EXISTS trg_appointments_updated_at
-    AFTER UPDATE ON appointments
-    FOR EACH ROW
-    BEGIN
-      UPDATE appointments SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-    END;`,
-  `CREATE TABLE IF NOT EXISTS client_payments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    company_id INTEGER NOT NULL,
-    client_id INTEGER NOT NULL,
-    amount REAL NOT NULL,
-    method TEXT NOT NULL DEFAULT 'pix',
-    reference TEXT,
-    paid_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
-    FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE CASCADE
-  );`,
-  `CREATE TABLE IF NOT EXISTS subscription_payments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    company_id INTEGER NOT NULL,
-    amount REAL NOT NULL,
-    due_date TEXT,
-    paid_at TEXT,
-    method TEXT NOT NULL DEFAULT 'pix',
-    reference TEXT,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'paid')),
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
-  );`,
-  'CREATE INDEX IF NOT EXISTS idx_client_payments_company_id ON client_payments(company_id);',
-  'CREATE INDEX IF NOT EXISTS idx_subscription_payments_company_id ON subscription_payments(company_id);',
-];
+const pool = new Pool(
+  process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.DB_SSL === 'false' ? false : isProdLikeDatabaseUrl ? { rejectUnauthorized: false } : false
+      }
+    : {
+        host: process.env.DB_HOST || 'localhost',
+        port: Number(process.env.DB_PORT || 5432),
+        user: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASSWORD || 'postgres',
+        database: process.env.DB_NAME || 'fabrica',
+        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
+      }
+);
 
-const migrationStatements = [
-  'ALTER TABLE subscriptions ADD COLUMN pix_key TEXT;',
-  "ALTER TABLE clients ADD COLUMN vehicle_plate TEXT;",
-  "ALTER TABLE clients ADD COLUMN vehicle_model TEXT;",
-  "ALTER TABLE clients ADD COLUMN plate_type TEXT NOT NULL DEFAULT 'nao_informado';",
-  "ALTER TABLE clients ADD COLUMN monthly_fee REAL NOT NULL DEFAULT 0;",
-  'ALTER TABLE clients ADD COLUMN next_due_date TEXT;',
-  'ALTER TABLE clients ADD COLUMN last_payment_date TEXT;',
-  "ALTER TABLE clients ADD COLUMN payment_status TEXT NOT NULL DEFAULT 'pendente';",
-  "ALTER TABLE users ADD COLUMN platform_owner INTEGER NOT NULL DEFAULT 0;",
-  "ALTER TABLE subscriptions ADD COLUMN preferred_payment_method TEXT NOT NULL DEFAULT 'pix';",
-];
+async function initializeDatabase() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      nome VARCHAR(120) NOT NULL,
+      email VARCHAR(120) UNIQUE NOT NULL,
+      senha_hash VARCHAR(255) NOT NULL,
+      tipo_usuario VARCHAR(20) NOT NULL CHECK (tipo_usuario IN ('admin', 'funcionario')),
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
 
-const seedStatements = [
-  `INSERT INTO wash_services (company_id, name, price, duration_minutes)
-   SELECT c.id, 'Lavagem Simples', 40, 30
-   FROM companies c
-   WHERE NOT EXISTS (
-     SELECT 1 FROM wash_services s WHERE s.company_id = c.id
-   );`,
-  `INSERT INTO wash_services (company_id, name, price, duration_minutes)
-   SELECT c.id, 'Lavagem Completa', 80, 60
-   FROM companies c
-   WHERE NOT EXISTS (
-     SELECT 1 FROM wash_services s WHERE s.company_id = c.id AND s.name = 'Lavagem Completa'
-   );`,
-  `INSERT INTO wash_services (company_id, name, price, duration_minutes)
-   SELECT c.id, 'Polimento', 150, 120
-   FROM companies c
-   WHERE NOT EXISTS (
-     SELECT 1 FROM wash_services s WHERE s.company_id = c.id AND s.name = 'Polimento'
-   );`,
-];
+    CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      cliente VARCHAR(160) NOT NULL,
+      modelo VARCHAR(160) NOT NULL,
+      referencia VARCHAR(120) NOT NULL,
+      data DATE NOT NULL,
+      tecido VARCHAR(120) NOT NULL,
+      largura NUMERIC(10,2),
+      media NUMERIC(10,2),
+      matriz NUMERIC(10,2),
+      retalho NUMERIC(10,2),
+      quantidade_total INTEGER NOT NULL CHECK (quantidade_total >= 0),
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
 
-function initDatabase() {
-  return new Promise((resolve, reject) => {
-    db.serialize(() => {
-      schemaStatements.forEach((statement) => db.run(statement));
-      migrationStatements.forEach((statement) => {
-        db.run(statement, (error) => {
-          if (error && !error.message.includes('duplicate column name')) {
-            // best-effort migration for legacy databases
-            // eslint-disable-next-line no-console
-            console.error('Migration error:', error.message);
-          }
-        });
-      });
-      seedStatements.forEach((statement) => db.run(statement));
-      db.get('SELECT 1', (error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
-      });
-    });
-  });
+    CREATE TABLE IF NOT EXISTS order_sizes (
+      id SERIAL PRIMARY KEY,
+      pedido_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+      tamanho VARCHAR(10) NOT NULL,
+      quantidade INTEGER NOT NULL CHECK (quantidade >= 0),
+      UNIQUE (pedido_id, tamanho)
+    );
+
+    CREATE TABLE IF NOT EXISTS production_records (
+      id SERIAL PRIMARY KEY,
+      pedido_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+      etapa VARCHAR(30) NOT NULL CHECK (etapa IN ('Costura', 'Travete', 'Lavanderia', 'Acabamento', 'Estoque')),
+      quantidade INTEGER NOT NULL CHECK (quantidade > 0),
+      funcionario_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      data TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminName = process.env.ADMIN_NAME || 'Administrador';
+
+  if (adminEmail && adminPassword) {
+    const existingAdmin = await pool.query('SELECT id FROM users WHERE email = $1 LIMIT 1', [adminEmail]);
+
+    if (existingAdmin.rowCount === 0) {
+      const senhaHash = await bcrypt.hash(adminPassword, 10);
+      await pool.query(
+        `INSERT INTO users (nome, email, senha_hash, tipo_usuario)
+         VALUES ($1, $2, $3, 'admin')`,
+        [adminName, adminEmail, senhaHash]
+      );
+      console.log(`Admin inicial criado: ${adminEmail}`);
+    }
+  }
 }
 
-module.exports = {
-  db,
-  initDatabase,
-};
+module.exports = { pool, initializeDatabase };

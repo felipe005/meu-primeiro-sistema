@@ -1,287 +1,169 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lava-Jato SaaS | Painel</title>
-  <link rel="stylesheet" href="/css/styles.css" />
-</head>
-<body class="panel-body">
-  <div class="shell">
-    <header class="topbar card-shell">
-      <div class="brand-row">
-        <div class="brand-avatar" id="brand-avatar">LJ</div>
-        <div>
-          <h1 id="company-title">Lava-Jato</h1>
-          <p id="company-subtitle" class="muted"></p>
-        </div>
-      </div>
-      <div class="topbar-actions">
-        <span class="plan-pill" id="plan-badge">Plano ativo</span>
-        <button id="logout-btn" class="ghost-btn">Sair</button>
-      </div>
-    </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FabricaFlow | Producao</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                100: '#e0f2fe',
+                600: '#0284c7',
+                900: '#082f49'
+              }
+            }
+          }
+        }
+      };
+    </script>
+  </head>
+  <body class="bg-slate-100 text-slate-900">
+    <div class="min-h-screen md:flex">
+      <aside class="bg-brand-900 p-6 text-white md:w-72">
+        <p class="text-xs uppercase tracking-[0.2em] text-brand-100">FabricaFlow</p>
+        <h1 class="mt-3 text-xl font-semibold">Controle de Producao</h1>
+        <p id="userInfo" class="mt-1 text-sm text-brand-100"></p>
 
-    <div id="billing-alert" class="alert-banner hidden"></div>
+        <nav class="mt-8 space-y-2">
+          <button data-view="dashboard" class="nav-btn w-full rounded-lg px-3 py-2 text-left hover:bg-white/10">Dashboard</button>
+          <button data-view="orders" class="nav-btn w-full rounded-lg px-3 py-2 text-left hover:bg-white/10">Pedidos</button>
+          <button data-view="production" class="nav-btn w-full rounded-lg px-3 py-2 text-left hover:bg-white/10">Producao</button>
+          <button data-view="users" id="usersNav" class="nav-btn w-full rounded-lg px-3 py-2 text-left hover:bg-white/10">Usuarios</button>
+        </nav>
 
-    <nav class="tabbar card-shell" id="tabbar">
-      <button class="tab-btn active" data-tab="agenda">Agenda</button>
-      <button class="tab-btn" data-tab="services">Servicos</button>
-      <button class="tab-btn" data-tab="team">Equipe</button>
-      <button class="tab-btn" data-tab="management">Gestao</button>
-      <button class="tab-btn" data-tab="cash">Caixa</button>
-      <button class="tab-btn" data-tab="purchases">Compras</button>
-      <button class="tab-btn" data-tab="stock">Estoque</button>
-      <button class="tab-btn" data-tab="map">Mapa</button>
-    </nav>
+        <button id="logoutBtn" class="mt-10 w-full rounded-lg border border-white/40 px-3 py-2 text-sm hover:bg-white/10">Sair</button>
+      </aside>
 
-    <main>
-      <section id="metrics" class="metrics-row"></section>
-
-      <section class="view active" id="view-agenda">
-        <div class="card-shell section-head">
-          <div class="search-wrap">
-            <input type="text" id="appointment-search" placeholder="Buscar por cliente, placa ou telefone..." />
-            <div class="status-tabs" id="status-tabs">
-              <button class="status-tab active" data-status="todos">Todos</button>
-              <button class="status-tab" data-status="aguardando">Aguardando</button>
-              <button class="status-tab" data-status="em_lavagem">Em Lavagem</button>
-              <button class="status-tab" data-status="pronto">Pronto</button>
-              <button class="status-tab" data-status="entregue">Entregue</button>
-            </div>
+      <main class="flex-1 p-4 md:p-8">
+        <section id="dashboardView" class="view space-y-4">
+          <h2 class="text-2xl font-semibold">Dashboard</h2>
+          <div class="grid gap-4 sm:grid-cols-3">
+            <article class="rounded-xl bg-white p-4 shadow-sm">
+              <p class="text-sm text-slate-500">Pedidos em producao</p>
+              <p id="statOrdersInProd" class="mt-2 text-3xl font-bold">0</p>
+            </article>
+            <article class="rounded-xl bg-white p-4 shadow-sm">
+              <p class="text-sm text-slate-500">Producao do dia</p>
+              <p id="statToday" class="mt-2 text-3xl font-bold">0</p>
+            </article>
+            <article class="rounded-xl bg-white p-4 shadow-sm">
+              <p class="text-sm text-slate-500">Total produzido</p>
+              <p id="statTotal" class="mt-2 text-3xl font-bold">0</p>
+            </article>
           </div>
-          <button class="primary-btn" id="new-appointment-btn">+ Novo Agendamento</button>
-        </div>
+        </section>
 
-        <form id="appointment-form" class="card-shell form-grid hidden">
-          <input type="hidden" name="id" />
-          <input type="text" name="clientName" placeholder="Nome do cliente" required />
-          <input type="text" name="vehiclePlate" placeholder="Placa (ABC-1234 / ABC-1D23)" />
-          <input type="text" name="vehicleModel" placeholder="Modelo" />
-          <input type="text" name="phone" placeholder="Telefone" />
-          <select name="serviceId" id="appointment-service"></select>
-          <select name="teamMemberId" id="appointment-team"></select>
-          <input type="date" name="appointmentDate" required />
-          <input type="time" name="appointmentTime" required />
-          <select name="status">
-            <option value="aguardando">Aguardando</option>
-            <option value="em_lavagem">Em Lavagem</option>
-            <option value="pronto">Pronto</option>
-            <option value="entregue">Entregue</option>
-          </select>
-          <input type="number" step="0.01" min="0" name="price" placeholder="Preco" />
-          <input type="text" name="notes" placeholder="Observacoes" />
-          <div class="form-actions">
-            <button type="submit" class="primary-btn">Salvar Agendamento</button>
-            <button type="button" class="ghost-btn" id="cancel-appointment-btn">Cancelar</button>
+        <section id="ordersView" class="view hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-semibold">Pedidos de Producao</h2>
           </div>
-        </form>
 
-        <div id="appointments-list" class="stack-list"></div>
-      </section>
-
-      <section class="view" id="view-services">
-        <div class="card-shell section-head">
-          <h2>Servicos Cadastrados</h2>
-          <button class="primary-btn" id="new-service-btn">+ Novo Servico</button>
-        </div>
-        <form id="service-form" class="card-shell form-grid hidden">
-          <input type="hidden" name="id" />
-          <input type="text" name="name" placeholder="Nome do servico" required />
-          <input type="number" step="0.01" min="0" name="price" placeholder="Preco" required />
-          <input type="number" min="1" name="durationMinutes" placeholder="Duracao (min)" required />
-          <select name="active">
-            <option value="1">Ativo</option>
-            <option value="0">Inativo</option>
-          </select>
-          <div class="form-actions">
-            <button type="submit" class="primary-btn">Salvar Servico</button>
-            <button type="button" class="ghost-btn" id="cancel-service-btn">Cancelar</button>
-          </div>
-        </form>
-        <div id="services-list" class="stack-list"></div>
-      </section>
-
-      <section class="view" id="view-team">
-        <div class="card-shell section-head">
-          <h2>Equipe</h2>
-          <button class="primary-btn" id="new-team-btn">+ Novo Funcionario</button>
-        </div>
-        <form id="team-form" class="card-shell form-grid hidden">
-          <input type="hidden" name="id" />
-          <input type="text" name="name" placeholder="Nome" required />
-          <input type="text" name="role" placeholder="Cargo" required />
-          <input type="number" step="0.01" min="0" name="salary" placeholder="Salario" required />
-          <input type="text" name="shiftLabel" placeholder="Turno (ex.: Dia 1)" />
-          <select name="active">
-            <option value="1">Ativo</option>
-            <option value="0">Inativo</option>
-          </select>
-          <div class="form-actions">
-            <button type="submit" class="primary-btn">Salvar Funcionario</button>
-            <button type="button" class="ghost-btn" id="cancel-team-btn">Cancelar</button>
-          </div>
-        </form>
-        <div id="team-list" class="stack-list"></div>
-      </section>
-
-      <section class="view" id="view-management">
-        <div id="admin-only-note" class="card-shell warning-note hidden">
-          Esta area e exclusiva para admin da empresa.
-        </div>
-
-        <div id="management-content" class="view-grid">
-          <div class="card-shell block-pad">
-            <div class="section-head compact">
-              <h2>Controle de Clientes</h2>
-              <button class="primary-btn" id="new-client-btn">+ Novo Cliente</button>
+          <form id="orderForm" class="space-y-4 rounded-xl bg-white p-4 shadow-sm">
+            <h3 class="font-medium">Novo pedido</h3>
+            <div class="grid gap-3 md:grid-cols-3">
+              <input name="cliente" placeholder="Cliente" required class="rounded-lg border p-2" />
+              <input name="modelo" placeholder="Modelo" required class="rounded-lg border p-2" />
+              <input name="referencia" placeholder="Referencia" required class="rounded-lg border p-2" />
+              <input name="data" type="date" required class="rounded-lg border p-2" />
+              <input name="tecido" placeholder="Tecido" required class="rounded-lg border p-2" />
+              <input name="quantidade_total" type="number" min="0" placeholder="Quantidade total" required class="rounded-lg border p-2" />
+              <input name="largura" type="number" step="0.01" placeholder="Largura" class="rounded-lg border p-2" />
+              <input name="media" type="number" step="0.01" placeholder="Media" class="rounded-lg border p-2" />
+              <input name="matriz" type="number" step="0.01" placeholder="Matriz" class="rounded-lg border p-2" />
+              <input name="retalho" type="number" step="0.01" placeholder="Retalho" class="rounded-lg border p-2" />
             </div>
 
-            <form id="client-form" class="form-grid hidden">
-              <input type="hidden" name="id" />
-              <input type="text" name="name" placeholder="Nome do cliente" required />
-              <input type="email" name="email" placeholder="Email" />
-              <input type="text" name="phone" placeholder="Telefone" />
-              <input type="text" name="vehiclePlate" id="client-plate" placeholder="Placa" />
-              <input type="text" name="vehicleModel" placeholder="Modelo do veiculo" />
-              <select name="plateType" id="client-plate-type">
-                <option value="nao_informado">Tipo da placa (auto)</option>
-                <option value="antiga">Antiga</option>
-                <option value="mercosul">Mercosul</option>
-              </select>
-              <input type="number" step="0.01" min="0" name="monthlyFee" placeholder="Mensalidade (R$)" />
-              <input type="date" name="nextDueDate" />
-              <select name="paymentStatus">
-                <option value="pendente">Mensalidade pendente</option>
-                <option value="em_dia">Mensalidade em dia</option>
-                <option value="atrasado">Mensalidade atrasada</option>
-              </select>
-              <select name="status">
-                <option value="active">Ativo</option>
-                <option value="lead">Lead</option>
-                <option value="inactive">Inativo</option>
-              </select>
-              <input type="text" name="notes" placeholder="Observacoes" />
-              <div class="form-actions">
-                <button type="submit" class="primary-btn">Salvar Cliente</button>
-                <button type="button" class="ghost-btn" id="cancel-client-btn">Cancelar</button>
-              </div>
-            </form>
-
-            <div id="clients-list" class="stack-list"></div>
-          </div>
-
-          <div class="card-shell block-pad">
-            <div class="section-head compact">
-              <h2>Pagamentos Recebidos</h2>
+            <div>
+              <p class="mb-2 text-sm font-medium text-slate-600">Grade de tamanhos</p>
+              <div id="sizesGrid" class="grid gap-2 grid-cols-3 md:grid-cols-6"></div>
             </div>
-            <form id="client-payment-form" class="form-grid">
-              <select name="clientId" id="client-payment-client" required></select>
-              <input type="number" step="0.01" min="0.01" name="amount" placeholder="Valor pago" required />
-              <select name="method">
-                <option value="pix">Pix</option>
-                <option value="dinheiro">Dinheiro</option>
-                <option value="cartao_credito">Cartao de Credito</option>
-                <option value="cartao_debito">Cartao de Debito</option>
-                <option value="boleto">Boleto</option>
-                <option value="transferencia">Transferencia</option>
-              </select>
-              <input type="text" name="reference" placeholder="Referencia (opcional)" />
-              <div class="form-actions">
-                <button type="submit" class="primary-btn">Registrar Pagamento</button>
-              </div>
-            </form>
-            <div id="client-payments-list" class="stack-list compact-list"></div>
-          </div>
-        </div>
-      </section>
 
-      <section class="view" id="view-cash">
-        <div id="cash-metrics" class="metrics-row"></div>
-        <div class="card-shell block-pad">
-          <div class="section-head compact"><h2>Lancar no Caixa</h2></div>
-          <form id="cash-form" class="form-grid">
-            <select name="type">
-              <option value="entrada">Entrada</option>
-              <option value="saida">Saida</option>
+            <button class="rounded-lg bg-brand-600 px-4 py-2 text-white">Salvar pedido</button>
+          </form>
+
+          <div class="overflow-x-auto rounded-xl bg-white shadow-sm">
+            <table class="min-w-full text-sm">
+              <thead class="bg-slate-50 text-left text-slate-600">
+                <tr>
+                  <th class="p-3">Cliente</th>
+                  <th class="p-3">Modelo</th>
+                  <th class="p-3">Referencia</th>
+                  <th class="p-3">Data</th>
+                  <th class="p-3">Qtd Total</th>
+                  <th class="p-3">Em Estoque</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="productionView" class="view hidden space-y-4">
+          <h2 class="text-2xl font-semibold">Registro de Producao</h2>
+          <form id="productionForm" class="grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-4">
+            <select id="pedido_id" required class="rounded-lg border p-2"></select>
+            <select id="etapa" required class="rounded-lg border p-2">
+              <option value="Costura">Costura</option>
+              <option value="Travete">Travete</option>
+              <option value="Lavanderia">Lavanderia</option>
+              <option value="Acabamento">Acabamento</option>
+              <option value="Estoque">Estoque</option>
             </select>
-            <input type="text" name="category" placeholder="Categoria" required />
-            <input type="number" step="0.01" min="0.01" name="amount" placeholder="Valor" required />
-            <input type="date" name="date" required />
-            <input type="text" name="description" placeholder="Descricao" />
-            <div class="form-actions"><button type="submit" class="primary-btn">Salvar no Caixa</button></div>
+            <input id="quantidade" type="number" min="1" required placeholder="Quantidade" class="rounded-lg border p-2" />
+            <button class="rounded-lg bg-brand-600 px-4 py-2 text-white">Registrar</button>
           </form>
-        </div>
-        <div id="cash-list" class="stack-list"></div>
-      </section>
 
-      <section class="view" id="view-purchases">
-        <div class="card-shell block-pad">
-          <div class="section-head compact"><h2>Compras</h2></div>
-          <form id="purchase-form" class="form-grid">
-            <input type="text" name="supplier" placeholder="Fornecedor" required />
-            <input type="text" name="item" placeholder="Item comprado" required />
-            <input type="number" step="0.01" min="0.01" name="quantity" placeholder="Quantidade" required />
-            <input type="number" step="0.01" min="0.01" name="unitPrice" placeholder="Valor unitario" required />
-            <input type="date" name="date" required />
-            <select name="status">
-              <option value="pedido">Pedido</option>
-              <option value="recebido">Recebido</option>
+          <div class="overflow-x-auto rounded-xl bg-white shadow-sm">
+            <table class="min-w-full text-sm">
+              <thead class="bg-slate-50 text-left text-slate-600">
+                <tr>
+                  <th class="p-3">Data</th>
+                  <th class="p-3">Pedido</th>
+                  <th class="p-3">Etapa</th>
+                  <th class="p-3">Quantidade</th>
+                  <th class="p-3">Funcionario</th>
+                </tr>
+              </thead>
+              <tbody id="productionTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="usersView" class="view hidden space-y-4">
+          <h2 class="text-2xl font-semibold">Cadastro de Usuarios</h2>
+          <form id="userForm" class="grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-4">
+            <input name="nome" required placeholder="Nome" class="rounded-lg border p-2" />
+            <input name="email" type="email" required placeholder="Email" class="rounded-lg border p-2" />
+            <input name="senha" type="password" required placeholder="Senha" class="rounded-lg border p-2" />
+            <select name="tipo_usuario" class="rounded-lg border p-2">
+              <option value="funcionario">Funcionario</option>
+              <option value="admin">Admin</option>
             </select>
-            <div class="form-actions"><button type="submit" class="primary-btn">Salvar Compra</button></div>
+            <button class="rounded-lg bg-brand-600 px-4 py-2 text-white md:col-span-4">Cadastrar</button>
           </form>
-        </div>
-        <div id="purchases-list" class="stack-list"></div>
-      </section>
 
-      <section class="view" id="view-stock">
-        <div id="stock-metrics" class="metrics-row"></div>
-        <div class="view-grid">
-          <div class="card-shell block-pad">
-            <div class="section-head compact"><h2>Cadastro de Item</h2></div>
-            <form id="stock-form" class="form-grid">
-              <input type="text" name="name" placeholder="Nome do item" required />
-              <input type="text" name="unit" placeholder="Unidade (L, UN, KG)" required />
-              <input type="number" step="0.01" min="0" name="quantity" placeholder="Estoque atual" required />
-              <input type="number" step="0.01" min="0" name="minQuantity" placeholder="Estoque minimo" required />
-              <div class="form-actions"><button type="submit" class="primary-btn">Salvar Item</button></div>
-            </form>
+          <div class="overflow-x-auto rounded-xl bg-white shadow-sm">
+            <table class="min-w-full text-sm">
+              <thead class="bg-slate-50 text-left text-slate-600">
+                <tr>
+                  <th class="p-3">Nome</th>
+                  <th class="p-3">Email</th>
+                  <th class="p-3">Tipo</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable"></tbody>
+            </table>
           </div>
+        </section>
 
-          <div class="card-shell block-pad">
-            <div class="section-head compact"><h2>Movimentacao</h2></div>
-            <form id="stock-move-form" class="form-grid">
-              <select name="itemId" id="stock-item-select" required></select>
-              <select name="type">
-                <option value="entrada">Entrada</option>
-                <option value="saida">Saida</option>
-              </select>
-              <input type="number" step="0.01" min="0.01" name="quantity" placeholder="Quantidade" required />
-              <input type="text" name="reason" placeholder="Motivo" />
-              <div class="form-actions"><button type="submit" class="primary-btn">Movimentar</button></div>
-            </form>
-          </div>
-        </div>
-        <div id="stock-list" class="stack-list"></div>
-      </section>
+        <p id="appMessage" class="hidden rounded-lg bg-slate-800 p-3 text-sm text-white"></p>
+      </main>
+    </div>
 
-      <section class="view" id="view-map">
-        <div class="card-shell block-pad">
-          <div class="section-head compact"><h2>Mapa de Atendimento</h2></div>
-          <form id="map-form" class="form-grid">
-            <input type="text" name="name" placeholder="Nome do ponto" required />
-            <input type="text" name="address" placeholder="Endereco" required />
-            <div class="form-actions"><button type="submit" class="primary-btn">Salvar Ponto</button></div>
-          </form>
-        </div>
-        <iframe id="map-frame" class="map-frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-        <div id="map-points-list" class="stack-list"></div>
-      </section>
-
-      <p id="app-message" class="app-message"></p>
-    </main>
-  </div>
-
-  <script src="/js/app.js"></script>
-</body>
+    <script src="/js/app.js"></script>
+  </body>
 </html>

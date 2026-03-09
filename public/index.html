@@ -1,64 +1,61 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SaaS Lava-Jato Multi-tenant | Login</title>
-  <link rel="stylesheet" href="/css/styles.css" />
-</head>
-<body class="auth-body">
-  <main class="auth-container">
-    <section class="auth-panel">
-      <h1>LaunchSaaS</h1>
-      <p>Plataforma SaaS para <strong>Lava-Jato</strong> com multi-tenant.</p>
-
-      <div class="tabs">
-        <button class="tab active" data-target="login-form">Entrar</button>
-        <button class="tab" data-target="register-form">Criar empresa</button>
-      </div>
-
-      <form id="login-form" class="form active">
-        <label>Email</label>
-        <input type="email" name="email" required />
-        <label>Senha</label>
-        <input type="password" name="password" required />
-        <button type="submit">Acessar painel</button>
-      </form>
-
-      <form id="register-form" class="form">
-        <div class="promo-card">
-          <p class="promo-badge">Promocao de Lancamento</p>
-          <p class="promo-title">Assine agora por <strong>R$ 49,99/mês</strong></p>
-          <p class="promo-subtitle">De R$ 99,90 por R$ 49,99 nos primeiros meses.</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FabricaFlow | Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#f0f9ff',
+                500: '#0284c7',
+                700: '#0369a1',
+                900: '#0c4a6e'
+              }
+            }
+          }
+        }
+      };
+    </script>
+  </head>
+  <body class="min-h-screen bg-slate-100">
+    <main class="grid min-h-screen md:grid-cols-2">
+      <section class="hidden bg-brand-900 p-10 text-white md:flex md:flex-col md:justify-between">
+        <div>
+          <p class="text-sm uppercase tracking-[0.2em] text-brand-50/80">FabricaFlow</p>
+          <h1 class="mt-6 text-4xl font-semibold leading-tight">Controle sua producao sem papel.</h1>
         </div>
+        <p class="text-sm text-brand-50/80">Sistema de producao para fabrica de roupas.</p>
+      </section>
 
-        <label>Nome da empresa</label>
-        <input type="text" name="companyName" required />
-        <label>Tipo de negocio</label>
-        <input type="text" name="businessType" value="Lava-Jato" required />
-        <label>Nome do admin</label>
-        <input type="text" name="adminName" required />
-        <label>Email admin</label>
-        <input type="email" name="email" required />
-        <label>Senha admin</label>
-        <input type="password" name="password" minlength="6" required />
-        <label>Mensalidade (R$)</label>
-        <input type="number" name="monthlyFee" min="0" step="0.01" value="49.99" readonly />
-        <label>Forma de pagamento preferida</label>
-        <select name="preferredPaymentMethod" required>
-          <option value="pix">Pix</option>
-          <option value="cartao_credito">Cartao de Credito</option>
-          <option value="cartao_debito">Cartao de Debito</option>
-          <option value="boleto">Boleto</option>
-          <option value="transferencia">Transferencia</option>
-        </select>
-        <button type="submit">Criar conta SaaS</button>
-      </form>
+      <section class="flex items-center justify-center p-6">
+        <div class="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+          <h2 class="text-2xl font-semibold text-slate-900">Entrar no sistema</h2>
+          <p class="mt-2 text-sm text-slate-500">Use seu email e senha para acessar.</p>
 
-      <p id="auth-message" class="message"></p>
-    </section>
-  </main>
+          <form id="loginForm" class="mt-8 space-y-4">
+            <label class="block">
+              <span class="mb-1 block text-sm font-medium text-slate-700">Email</span>
+              <input id="email" type="email" required class="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-brand-500 focus:ring" />
+            </label>
 
-  <script src="/js/auth.js"></script>
-</body>
+            <label class="block">
+              <span class="mb-1 block text-sm font-medium text-slate-700">Senha</span>
+              <input id="senha" type="password" required class="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-brand-500 focus:ring" />
+            </label>
+
+            <button class="w-full rounded-lg bg-brand-700 px-4 py-2 font-medium text-white transition hover:bg-brand-900">Entrar</button>
+          </form>
+
+          <p id="errorMessage" class="mt-4 hidden rounded-lg bg-red-50 p-3 text-sm text-red-700"></p>
+        </div>
+      </section>
+    </main>
+
+    <script src="/js/auth.js"></script>
+  </body>
 </html>

@@ -1,15 +1,19 @@
-const app = require('./src/app');
-const { initDatabase } = require('./src/config/database');
+const { createApp } = require('./src/app');
+const { initializeDatabase } = require('./src/config/database');
 
 const PORT = process.env.PORT || 3000;
 
-initDatabase()
-  .then(() => {
+async function bootstrap() {
+  try {
+    await initializeDatabase();
+    const app = createApp();
     app.listen(PORT, () => {
-      console.log(`Servidor SaaS rodando na porta ${PORT}`);
+      console.log(`Servidor rodando na porta ${PORT}`);
     });
-  })
-  .catch((error) => {
-    console.error('Falha ao iniciar banco de dados:', error);
+  } catch (error) {
+    console.error('Falha ao iniciar a aplicacao:', error);
     process.exit(1);
-  });
+  }
+}
+
+bootstrap();

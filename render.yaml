@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: launchsaas-app
+    name: fabricaflow-app
     runtime: node
     buildCommand: npm install
     startCommand: npm start

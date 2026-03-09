@@ -1,59 +1,34 @@
-const db = require('../utils/db');
+const { pool } = require('../config/database');
 
-function create({ companyId, name, email, passwordHash, role = 'member', active = 1, platformOwner = 0 }) {
-  return db.run(
-    `INSERT INTO users (company_id, name, email, password_hash, role, platform_owner, active)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [companyId, name, email, passwordHash, role, Number(platformOwner ? 1 : 0), active]
+async function createUser({ nome, email, senhaHash, tipoUsuario }) {
+  const query = `
+    INSERT INTO users (nome, email, senha_hash, tipo_usuario)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id, nome, email, tipo_usuario, created_at
+  `;
+  const values = [nome, email.toLowerCase(), senhaHash, tipoUsuario];
+  const { rows } = await pool.query(query, values);
+  return rows[0];
+}
+
+async function findUserByEmail(email) {
+  const { rows } = await pool.query('SELECT * FROM users WHERE email = $1 LIMIT 1', [email.toLowerCase()]);
+  return rows[0] || null;
+}
+
+async function findUserById(id) {
+  const { rows } = await pool.query(
+    'SELECT id, nome, email, tipo_usuario, created_at FROM users WHERE id = $1 LIMIT 1',
+    [id]
   );
+  return rows[0] || null;
 }
 
-function findByEmail(email) {
-  return db.get('SELECT * FROM users WHERE email = ?', [email]);
-}
-
-function findById(userId) {
-  return db.get('SELECT * FROM users WHERE id = ?', [userId]);
-}
-
-function listByCompany(companyId) {
-  return db.all(
-    `SELECT id, name, email, role, platform_owner AS platformOwner, active, created_at AS createdAt
-     FROM users
-     WHERE company_id = ?
-     ORDER BY created_at DESC`,
-    [companyId]
+async function listUsers() {
+  const { rows } = await pool.query(
+    'SELECT id, nome, email, tipo_usuario, created_at FROM users ORDER BY created_at DESC'
   );
+  return rows;
 }
 
-function updateById(companyId, userId, { name, email, role, active, passwordHash }) {
-  const fields = ['name = ?', 'email = ?', 'role = ?', 'active = ?'];
-  const values = [name, email, role, active];
-
-  if (passwordHash) {
-    fields.push('password_hash = ?');
-    values.push(passwordHash);
-  }
-
-  values.push(companyId, userId);
-
-  return db.run(
-    `UPDATE users
-     SET ${fields.join(', ')}
-     WHERE company_id = ? AND id = ?`,
-    values
-  );
-}
-
-function deleteById(companyId, userId) {
-  return db.run('DELETE FROM users WHERE company_id = ? AND id = ?', [companyId, userId]);
-}
-
-module.exports = {
-  create,
-  findByEmail,
-  findById,
-  listByCompany,
-  updateById,
-  deleteById,
-};
+module.exports = { createUser, findUserByEmail, findUserById, listUsers };
